@@ -1,0 +1,5 @@
+requests
+py7zr
+google-api-python-client
+python-mpv
+yt_dlp

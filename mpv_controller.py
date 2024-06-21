@@ -4,6 +4,9 @@ import html
 import yt_dlp
 import mpv
 import threading
+import re
+from config import Config as conf
+
 
 # Global variables for song management
 current_song_index = 0
@@ -18,19 +21,30 @@ def decode_song_name(string):
     decoded = html.unescape(string)
     return decoded[:255]
 
+# Extract video ID from a YouTube URL
+def extract_video_id(url):
+    video_id_match = re.match(r'.*v=([^&]+)', url)
+    if video_id_match:
+        return video_id_match.group(1)
+    return None
+
 # Perform the search and start playing
 def youtube_search_and_play(query):
     global songs, names, current_song_index
-
+    
+    #youtube_main.ttClient.send_message("Quota exceeded. Please try again later.", None , 2)
     # Check if query is a valid YouTube video link
     if is_valid_youtube_link(query):
-        songs = [query]  # Create a list with only the given link
-        names = [query]  # For consistency, assume the name is the link itself
+        video_id = extract_video_id(query)
+        if video_id:
+            songs = [f'https://www.youtube.com/watch?v={video_id}']  # Create a list with only the given link
+            names = [query]  # For consistency, assume the name is the link itself
     else:
         # Perform a YouTube search
         search_results = search_you_tube(query)
 
         if search_results is None:
+            #tt.send_message("Quota exceeded. Please try again later.", None , 2)
             print("Quota exceeded. Please try again later.")
             return None  # Exit early if quota is exceeded
 
@@ -41,8 +55,6 @@ def youtube_search_and_play(query):
 
     if songs:
         song_name = decode_song_name(names[current_song_index])
-        print("sz - song url")
-        print(songs[current_song_index])
         
         audio_url = download_audio_url(songs[current_song_index])
         threading.Thread(target=play_audio, args=(audio_url,)).start()
@@ -93,15 +105,24 @@ def stop_playback():
 
 # Pause/Resume playback
 def pause_resume_playback():
-    player.command('cycle', 'pause')
+    player.pause = not player.pause
+    
+# Seek forward
+def seek_forward(seconds):
+    player.command('seek', seconds, 'relative')
+
+# Seek backward
+def seek_backward(seconds):
+    player.command('seek', -seconds, 'relative')
 
 # Function to check if a string is a valid YouTube video link
 def is_valid_youtube_link(link):
-    import re
-    # Regular expression pattern for YouTube video links
-    pattern = r"^((?:https?:)?\/\/)?((?:www|m)\.)?(?:(youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"
+    pattern = r'^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$'
     return re.match(pattern, link) is not None
 
+# Set volume
+def set_volume(volume):
+    player.volume = volume
 # Download audio URL
 def download_audio_url(url):
     # Specify format options to get the best audio

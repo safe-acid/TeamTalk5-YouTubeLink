@@ -15,14 +15,14 @@ class MPV_Controller:
         self.songs = []
         self.names = []
         self.playURL = False
-
         # Create an MPV player instance
         self.player = mpv.MPV(ytdl=True)
         self.is_playing = False
-
         # Set initial volume to the maximum volume defined in the configuration
         self.player.volume = conf.max_volume
-
+        # Observe the idle-active property to detect when playback finishes
+        self.player.observe_property('idle-active', self.on_idle_active)
+        
     # Decode song name
     def decode_song_name(self, string):
         decoded = html.unescape(string)
@@ -77,7 +77,14 @@ class MPV_Controller:
 
     def play_audio(self, url):
         self.player.play(url)
+        self.is_playing = True
         self.player.wait_for_playback()
+        self.is_playing = False
+        
+    # Called when playback finishes
+    def on_idle_active(self, name, value):
+        if value and self.is_playing:
+            self.play_next_song()
 
     # Play the next song
     def play_next_song(self):

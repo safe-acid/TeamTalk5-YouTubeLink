@@ -65,6 +65,7 @@ def essential_sdk(sdk_dir):
     print(f"Kept only essential files and directories in {sdk_dir}.")
 
 def install_sdk():
+    print("Downloading SDK")
     """Downloads, extracts, and installs the TeamTalk SDK."""
      # Check if the 'sdk' directory exists
     if os.path.exists("sdk"):
@@ -92,7 +93,7 @@ def install_sdk():
         essential_sdk(sdk_dir)  # Keep only the essential files and directories
 
         print("TeamTalk SDK installation complete!")
-        print("You can run command\n python radio.py --devices\n define your sound device and save ID in config.py")
+        print("You can run command\n python youtube_main.py --devices\n define your sound device and save ID in config.py")
 
 if __name__ == "__main__":
     

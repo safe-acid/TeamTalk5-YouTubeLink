@@ -7,8 +7,8 @@ messages = {
     },
     
     "help": {
-        "en": "s: search the song name\np: pause\play\n+: next song\n-: previous song\nvX: set up the volume\nspX: set up speed from 1 to 4\nv: about\nq: exit",
-        "ru": "s: поиск песни\np: пауза\воспроизведение\n+: следующий трек\n-: предыдущий трек\nvX: настройка громкости\nspX: настройка скорости от 1 до 4\nv: версия\nq: выход"  
+        "en": "s: search the song name\np: pause\play\n+: next song\n-: previous song\nvX: set up the volume\nspX: set up speed from 1 to 4\npl: show last searches\nplX: play song by ID from last search\nv: about\nq: exit",
+        "ru": "s: поиск песни\np: пауза\воспроизведение\n+: следующий трек\n-: предыдущий трек\nvX: настройка громкости\nspX: настройка скорости от 1 до 4\npl: просмотр последнего поиска\nplX: выбор песни, по номеру из последнего поиска\nv: версия\nq: выход"  
     },
     
      "info": {

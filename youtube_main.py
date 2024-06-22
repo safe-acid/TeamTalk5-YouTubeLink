@@ -300,6 +300,7 @@ class TTClient:
                         self.mpv.pause_resume_playback()
                     #quit
                     elif msg.lower() == "q":
+                        self.disable_voice_transmission()
                         self.mpv.stop_playback()
                         self.send_message(f"бот уснул", fromUserID, 1)
                         self.tt.doChangeStatus(0, ttstr(self.get_message("info")))  

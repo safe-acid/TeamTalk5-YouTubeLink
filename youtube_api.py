@@ -16,10 +16,9 @@ def search_you_tube(query):
             maxResults=conf.max_search_number,
             type='video'
         )
-
-        # Execute the request and get the response
-        response = request.execute()
         
+        # Execute the request and get the response
+        response = request.execute()       
         search_results = []
 
         # Process each video in the response
@@ -33,8 +32,8 @@ def search_you_tube(query):
             }
             
             search_results.append(item)
-        
-        print(search_results)
+        ##debug
+        #print(search_results)
         return search_results
     
     except HttpError as e:
@@ -44,7 +43,8 @@ def search_you_tube(query):
             return None
         else:
             raise
-# Test your Key for debug
+        
+# ##Test your Key for debug
 # if __name__ == "__main__":
 #     # Example query
 #     search_you_tube("metallica")

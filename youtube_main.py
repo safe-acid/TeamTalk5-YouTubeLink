@@ -1,11 +1,10 @@
-import sys, os, platform, ctypes, logging, time, threading, argparse, importlib, re, requests
+import sys, os, platform, ctypes, logging, time, threading, argparse, json
 from config import Config as conf
 from typing import Optional
 from messages import messages
-import _youtube_process as process
-import mpv_controller
-from mpv_controller import youtube_search_and_play, play_next_song, play_previous_song, stop_playback, pause_resume_playback
+from mpv_controller import MPV_Controller
 from collections import defaultdict
+
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 system = platform.system()
@@ -59,8 +58,10 @@ class TTClient:
         self.reconnect_thread.start()
         self.admin = conf.admin  # Initialize the admin flag
         self.last_message_time = defaultdict(lambda: 0)  # Track last message time for each user
-        
-        
+        #instance of MPV_Controller
+        self.mpv = MPV_Controller()
+    
+            
             
     def enable_voice_transmission(self) -> None:
         self.tt.enableVoiceTransmission(True)
@@ -80,7 +81,8 @@ class TTClient:
         time.sleep(1)
               
     def onConnectionLost(self):
-        self.radio_stop()
+        self.mpv.stop_playback()
+        self.tt.doChangeStatus(0, ttstr(self.get_message("info")))  
         self.connect()
         self.connected = False
         logger.info("Connection lost.")
@@ -156,6 +158,19 @@ class TTClient:
             self.change_nickname(f"{conf.botName}" )
             self.tt.doChangeStatus(0, ttstr(self.get_message("info")))   
     
+    #player status        
+    def isPlaying(self):
+        if self.mpv.player_status == "playing":
+            return True
+    #player status        
+    def isPaused(self):
+        if self.mpv.player_status == "paused":
+            return True
+    #player status        
+    def isStop(self):
+        if self.mpv.player_status == "stopped":
+            return True
+    
     def send_message(
         self, text: str, user: Optional[User] = None, type: int = 1
         ) -> None:
@@ -172,7 +187,53 @@ class TTClient:
         elif type == 2:
                 message.nChannelID = self.tt.getMyChannelID()
         self.tt.doTextMessage(message)
-        
+    
+    
+    #read search_list.json
+    def read_search_results(self):
+        try:
+            with open('search_list.json', 'r') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return []
+
+    #***********************************************
+    #******** working with searh_list.json**********
+    #***********************************************
+    #prepare list to user check the list - command pl
+    def send_search_results(self, fromUserID):
+        search_results = self.read_search_results()
+        global_index = 1
+        for i in range(0, len(search_results), 3):
+            chunk = search_results[i:i + 3]
+            message = "\n".join([f"{global_index + j}. {item['name']}" for j, item in enumerate(chunk)])
+            global_index += len(chunk)
+            self.send_message(message, fromUserID, 1)
+
+    #get song by ID from search_json
+    def get_song_by_number(self, number):
+        search_results = self.read_search_results()
+        if 1 <= number <= len(search_results):
+            return search_results[number - 1]
+        else:
+            return None  
+    #play song by ID
+    def play_song_by_number(self, fromUserID, number):
+        song = self.get_song_by_number(number)
+        if song:
+            song_name = song['name']
+            song_url = song['url']
+            threading.Thread(target=self.youtube_search_and_play_thread, args=(song_url, fromUserID, song_name)).start()
+            
+        else:
+            self.send_message("Invalid song number. Please try again.", fromUserID, 1)        
+    #***********************************************
+    #******** working with searh_list.json**********
+    #***********************************************        
+    
+    
+    
+    
     def onUserMessage(self, fromUserID, fromUserName, msg):
         anonymous = self.anonymous(fromUserName)
         userInChanel = self.userID_inChannel(fromUserID)
@@ -189,42 +250,109 @@ class TTClient:
             #user must be in chanel and not anonymous
             if anonymous and userInChanel:
                 if self.isUserAdmin(fromUserID) or not self.admin:
-                
+                    
+                    #about
                     if  msg.lower() == "v":
                         self.send_message(self.get_message("about"),fromUserID,1) 
-                    
+                    #help
                     elif msg.lower() == "h":
                         self.send_message(self.get_message("help"),fromUserID,1) 
-                        
+                    #search and ply   
                     elif msg.lower().startswith("s ") and len(msg.lower()) > 4:
                         search_query  = msg[2:].strip()
+                        self.mpv.stop_playback()
                         self.send_message(f"{ttstr(fromUserName)} запросил {search_query}", fromUserID, 2) 
                         self.send_message("Запрашиваем Youtube...", fromUserID, 1)
-                        self.enable_voice_transmission()
-                        song_name = youtube_search_and_play(search_query)
-                        if song_name:
-                            self.send_message(f"играет: {song_name}", fromUserID, 1)
-                            self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
-                        else:
-                            self.send_message(f"ничего не найдено", fromUserID, 1)
+                        threading.Thread(target=self.youtube_search_and_play_thread, args=(search_query, fromUserID)).start()
+                    #next song
                     elif msg == "+":
                         self.send_message(f"следующий трек", fromUserID, 1)
-                        song_name = play_next_song()
+                        song_name = self.mpv.play_next_song()
                         if song_name: 
                             self.send_message(f"играет: {song_name}", fromUserID, 1)
                             self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
+                    #previous song
                     elif msg == "-":
                         self.send_message(f"предыдущий трек", fromUserID, 1)
-                        play_previous_song()
-                        song_name = play_next_song()
+                        self.mpv.play_previous_song()
+                        song_name = self.mpv.play_next_song()
                         if song_name: 
                             self.send_message(f"играет: {song_name}", fromUserID, 1)
                             self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
+                    #rewind fwd
+                    elif msg.startswith("+") and len(msg) > 1 and self.isPlaying:
+                        try:
+                            seconds = int(msg[1:])
+                            self.mpv.seek_forward(seconds)
+                            self.send_message(f"Перемотка вперед на {seconds} секунд", fromUserID, 1)
+                        except ValueError:
+                            self.send_message("Неверный формат для перемотки вперед. Пожалуйста, введите число после '+'.", fromUserID, 1)
+                    #rewind back
+                    elif msg.startswith("-") and len(msg) > 1 and self.isPlaying:
+                        try:
+                            seconds = int(msg[1:])
+                            self.mpv.seek_backward(seconds)
+                            self.send_message(f"Перемотка назад на {seconds} секунд", fromUserID, 1)
+                        except ValueError:
+                            self.send_message("Неверный формат для перемотки назад. Пожалуйста, введите число после '+'.", fromUserID, 1)
+                    #pause/play
                     elif msg.lower() == "p":
-                        pause_resume_playback()
+                        self.mpv.pause_resume_playback()
+                    #quit
+                    elif msg.lower() == "q":
+                        self.mpv.stop_playback()
+                        self.send_message(f"бот уснул", fromUserID, 1)
+                        self.tt.doChangeStatus(0, ttstr(self.get_message("info")))  
+                    #adjust speed 
+                    elif msg.lower().startswith("sp") and len(msg) > 2:  # Check for at least one digit after "v"
+                        try:
+                            speed = float(msg[2:]) 
+                            if 1 <= speed <= 4.:
+                                self.mpv.set_speed(speed)
+                                self.send_message(f"{self.get_message('speed_set_to')}  {speed}", fromUserID, 2)
+                            else:
+                                self.send_message(self.get_message("wrong_speed"), fromUserID, 1)
+                        except ValueError:
+                            self.send_message((self.get_message("wrong_speed_format")), fromUserID, 1)    
+                           
+                    #volume control
+                    elif msg.lower().startswith("v") and len(msg) > 1:  # Check for at least one digit after "v"
+                        try:
+                            volume_level = int(msg[1:])  # Extract digits after "v"
+                            if 0 <= volume_level <= conf.max_volume:   
+                                self.mpv.set_volume(volume_level)
+                                self.send_message(f"{self.get_message('vol_set_to')}  {volume_level}", fromUserID, 2)
+                            else:
+                                self.send_message(self.get_message("wrong_volume"), fromUserID, 1)
+                        except ValueError:
+                            self.send_message((self.get_message("wrong_volume_format")), fromUserID, 1)  
                     
-                    
-      
+                    #show saved searhed play list
+                    elif msg.lower() == "pl":
+                        self.send_search_results(fromUserID)
+                        
+                    #play from last seareche play list
+                    elif msg.lower().startswith("pl") and len(msg) > 2:
+                        song_number = int(msg[2:])  # Extract digits after "v"
+                        self.play_song_by_number(fromUserID, song_number)                     
+    #enf of def onUserMessage
+    
+    
+    #serach an play thread
+    def youtube_search_and_play_thread(self, query, fromUserID, song_name = None):
+        song= self.mpv.youtube_search_and_play(query) 
+        if song:
+            self.enable_voice_transmission()
+            #if user playing from saved search_list argument song_name is passed
+            #if playing from search passs the song as argument 
+            if song_name == None:
+                song_name =  song       
+            self.send_message(f"играет: {song_name}", fromUserID, 1)
+            self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
+        else:
+            self.send_message(f"ничего не найдено", fromUserID, 1)                               
+     
+    #reconnect 
     def reconnect_loop(self):
         while True:   
                 if not self.connected:
@@ -234,7 +362,8 @@ class TTClient:
                 # Attempt to reconnect
                     self.connect()
                 time.sleep(self.reconnect_delay)    
-
+    
+    #get Audio Decvices
     def defaultAudioDevices(self):
         msg = "\n\nDefault Audio Input Devices:\n"
         for device in self.tt.getSoundDevices():

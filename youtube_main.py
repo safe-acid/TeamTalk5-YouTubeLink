@@ -4,40 +4,14 @@ from typing import Optional
 from messages import messages
 from mpv_controller import MPV_Controller
 from collections import defaultdict
+import library 
+from library import ttstr
 
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-system = platform.system()
-   # Construct the full path to the dynamic library file MAC/Linux/Win
-if system == "Darwin":
-    library_dir = os.path.join(script_dir, "sdk/Library/TeamTalk_DLL")
-    library_path = os.path.join(library_dir, "libTeamTalk5.dylib") 
-    print("run on Darwin")
-elif system == "Linux":
-    library_dir = os.path.join(script_dir, "sdk/Library/TeamTalk_DLL")
-    library_path = os.path.join(library_dir, "libTeamTalk5.so")
-    print("run on Linux")
-elif system == "Windows":
-    library_dir = os.path.join(script_dir, "sdk/Library/TeamTalk_DLL")
-    library_path = os.path.join(library_dir, "TeamTalk5.dll")
-    print("run on Windows")
-else:
-    print(f"Unsupported system: {system}")
-    sys.exit(1)
-    
-# Load the dynamic library using ctypes
-try:
-    ctypes.cdll.LoadLibrary(library_path)
-except OSError as e:
-    print(f"Error loading the library: {e}")
-    sys.exit(1)
-    
 # Add logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from sdk.Library.TeamTalkPy import TeamTalk5
-from sdk.Library.TeamTalkPy.TeamTalk5 import *
 
 class TTClient:
     def __init__(self, host, tcpPort, udpPort, nickName, userName, password):
@@ -47,7 +21,7 @@ class TTClient:
         self.nickName = nickName
         self.userName = userName
         self.password = password
-        self.tt = TeamTalk5.TeamTalk()
+        self.tt = library.TeamTalk5.TeamTalk()
         self.tt.onConnectSuccess = self.onConnectSuccess
         self.tt.onConnectionLost = self.onConnectionLost
         self.tt.onCmdMyselfLoggedIn = self.onCmdMyselfLoggedIn
@@ -109,11 +83,11 @@ class TTClient:
     
     def onCmdUserTextMessage(self, message):
         msgType = message.nMsgType
-        if msgType == TeamTalk5.TextMsgType.MSGTYPE_USER:
+        if msgType == library.TeamTalk5.TextMsgType.MSGTYPE_USER:
             self.onUserMessage(message.nFromUserID, message.szFromUsername, message.szMessage)
-        if msgType == TeamTalk5.TextMsgType.MSGTYPE_CHANNEL:
+        if msgType == library.TeamTalk5.TextMsgType.MSGTYPE_CHANNEL:
             self.onChannelMessage(message.nFromUserID, message.szFromUsername, message.nChannelID, message.szMessage)
-        if msgType == TeamTalk5.TextMsgType.MSGTYPE_BROADCAST:
+        if msgType == library.TeamTalk5.TextMsgType.MSGTYPE_BROADCAST:
             self.onBroadcastMessage(message.nFromUserID, message.szFromUsername, message.szMessage)  
     
     #grabbing users in channels
@@ -172,9 +146,9 @@ class TTClient:
             return True
     
     def send_message(
-        self, text: str, user: Optional[User] = None, type: int = 1
+        self, text: str, user: Optional[library.User] = None, type: int = 1
         ) -> None:
-        message = TeamTalk5.TextMessage()
+        message = library.TeamTalk5.TextMessage()
         message.nFromUserID = self.tt.getMyUserID()
         message.nMsgType = type
         message.szMessage = ttstr(text)
@@ -239,7 +213,6 @@ class TTClient:
         userInChanel = self.userID_inChannel(fromUserID)
         msg = ttstr(msg)
         current_time = time.time()
-
         # Check for flooding
         if current_time - self.last_message_time[fromUserID] < conf.msgTimeDelay:
             self.send_message("Слишком быстро. Подождите немного.", fromUserID, 1)
@@ -366,22 +339,12 @@ class TTClient:
                     self.connect()
                 time.sleep(self.reconnect_delay)    
     
-    #get Audio Decvices
-    def defaultAudioDevices(self):
-        msg = "\n\nDefault Audio Input Devices:\n"
-        for device in self.tt.getSoundDevices():
-            msg += f"Device ID: {device.nDeviceID},\n" \
-               f"Sound System: {device.nSoundSystem},\n" \
-               f"Device Name: {ttstr(device.szDeviceName)},\n\n " \
 
-        print(msg)
-        
               
 if __name__ == "__main__":
     try:
         parser = argparse.ArgumentParser(description='Process some integers.')
         parser.add_argument('--language', action='store', help='Select language (ru or en)', default="")
-        parser.add_argument('--devices', action='store_true', help='Display default audio devices')
         args = parser.parse_args()
         
         # Set current_language based on the argument
@@ -396,15 +359,11 @@ if __name__ == "__main__":
         
         ttClient = TTClient(ttstr(conf.host), conf.tcpPort, conf.udpPort, ttstr(conf.botName), ttstr(conf.username), ttstr(conf.password))
         
-        if args.devices:
-            ttClient.defaultAudioDevices()
-        else:
-            # Start the TeamTalk client if not displaying devices
-            time.sleep(1.5)
-            ttClient.start()
-            while True:
-                ttClient.tt.runEventLoop()
+        # Start the TeamTalk client if not displaying devices
+        time.sleep(1.5)
+        ttClient.start()
+        while True:
+            ttClient.tt.runEventLoop()
                 
     except KeyboardInterrupt:
         running = False
-        

@@ -283,16 +283,14 @@ class TTClient:
                     elif msg.startswith("+") and len(msg) > 1 and self.isPlaying:
                         try:
                             seconds = int(msg[1:])
-                            self.mpv.seek_forward(seconds)
-                            self.send_message(f"Перемотка вперед на {seconds} секунд", fromUserID, 1)
+                            self.mpv.seek_forward(seconds, fromUserID, self.handle_message)
                         except ValueError:
                             self.send_message("Неверный формат для перемотки вперед. Пожалуйста, введите число после '+'.", fromUserID, 1)
                     #rewind back
                     elif msg.startswith("-") and len(msg) > 1 and self.isPlaying:
                         try:
                             seconds = int(msg[1:])
-                            self.mpv.seek_backward(seconds)
-                            self.send_message(f"Перемотка назад на {seconds} секунд", fromUserID, 1)
+                            self.mpv.seek_backward(seconds, fromUserID, self.handle_message)
                         except ValueError:
                             self.send_message("Неверный формат для перемотки назад. Пожалуйста, введите число после '+'.", fromUserID, 1)
                     #pause/play
@@ -352,7 +350,11 @@ class TTClient:
             self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
         else:
             self.send_message(f"ничего не найдено", fromUserID, 1)                               
-     
+    
+    # Define the handling method from other class
+    def handle_message(self, message, fromUserID):
+        self.send_message(message, fromUserID, 1)
+        
     #reconnect 
     def reconnect_loop(self):
         while True:   

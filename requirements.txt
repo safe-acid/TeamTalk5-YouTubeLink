@@ -3,3 +3,5 @@ py7zr
 google-api-python-client
 python-mpv
 yt_dlp
+google-auth
+google-auth-oauthlib

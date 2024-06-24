@@ -1,13 +1,13 @@
+from __future__ import print_function, unicode_literals
+from youtube_api import search_you_tube
+import html
 import yt_dlp
+import mpv
 import threading
 import re
-import html
 import json
 from config import Config as conf
 import time
-from youtube_oauth import YouTubeOAuth2Handler
-import mpv
-from youtube_api import search_you_tube
 
 class MPV_Controller:
     def __init__(self):
@@ -19,13 +19,8 @@ class MPV_Controller:
         self.is_playing = False
         self.player.volume = conf.max_volume
         self.current_position = 0
-        self.ydl_opts = {
-            'format': 'bestaudio/best',
-            'noplaylist': True,
-            'ignoreerrors': True,
-            'progress_hooks': [self.progress_hook],
-            'extractor_classes': [YouTubeOAuth2Handler]
-        }
+        # self.playback_thread = threading.Thread(target=self.check_playback_status, daemon=True)
+        # self.playback_thread.start()
 
     def decode_song_name(self, string):
         decoded = html.unescape(string)
@@ -62,8 +57,7 @@ class MPV_Controller:
         if self.songs:
             song_name = self.decode_song_name(self.names[self.current_song_index])
             audio_url = self.download_audio_url(self.songs[self.current_song_index])
-            if audio_url:
-                threading.Thread(target=self.play_audio, args=(audio_url,)).start()
+            threading.Thread(target=self.play_audio, args=(audio_url,)).start()
             song_list = "\n".join([f"{i+1}. {name}" for i, name in enumerate(self.names)])
             print(song_list)
             if not self.playURL:
@@ -79,6 +73,17 @@ class MPV_Controller:
         self.player.play(url)
         self.player.wait_for_playback()
         self.is_playing = False
+    #TODO
+    # def check_playback_status(self):
+    #     while True:
+    #         if self.is_playing:
+    #             total_duration = self.player.duration
+    #             self.current_position = self.player.playback_time
+    #             remaining_time = int(round(total_duration - self.current_position))
+    #             print(f"song remaining time -> {remaining_time}")
+    #             if remaining_time <= 2:
+    #                 self.play_next_song()
+    #         time.sleep(2)
 
     def play_next_song(self):
         if not self.songs:
@@ -92,8 +97,7 @@ class MPV_Controller:
         else:
             song_name = self.decode_song_name(self.names[self.current_song_index])
             audio_url = self.download_audio_url(self.songs[self.current_song_index])
-            if audio_url:
-                threading.Thread(target=self.play_audio, args=(audio_url,)).start()
+            threading.Thread(target=self.play_audio, args=(audio_url,)).start()
             return song_name
 
     def play_previous_song(self):
@@ -105,8 +109,7 @@ class MPV_Controller:
             self.current_song_index = len(self.songs) - 1
         song_name = self.decode_song_name(self.names[self.current_song_index])
         audio_url = self.download_audio_url(self.songs[self.current_song_index])
-        if audio_url:
-            threading.Thread(target=self.play_audio, args=(audio_url,)).start()
+        threading.Thread(target=self.play_audio, args=(audio_url,)).start()
         return song_name
 
     def stop_playback(self):
@@ -173,14 +176,13 @@ class MPV_Controller:
         return re.match(pattern, link) is not None
 
     def download_audio_url(self, url):
-        with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            if info is None:
-                print(f"Error extracting info for URL: {url}")
-                return None
-            audio_url = info.get('url')
-            return audio_url
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'noplaylist': True,
+            'ignoreerrors': True,
+        }
 
-    def progress_hook(self, d):
-        if d['status'] == 'finished':
-            self.current_position = 0 
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            audio_url = info['url']
+            return audio_url

@@ -15,7 +15,7 @@ class Config:
     
     #Other settings
     #Audio Device ID - INT 
-    audioInputID = 6
+    audioInputID = 1
     #Audio Device ID - INT   
     max_volume = 75
     #Only admin can operaate this bot - Boolean        
@@ -25,9 +25,7 @@ class Config:
     
     #YouTube Api Key
     youtubeAPIkey = str("AIzaSyCU6L_4VxmBRwsEQS8ApKwuWSOqgayP118")
-    #Google OAuth
-    YOUR_CLIENT_ID = "165739457301-7k8oimgpk778rjocjcl6dak4uc580650.apps.googleusercontent.com"
-    YOUR_CLIENT_SECRET = "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"
+    
     #Max search result per one request - INT
     max_search_number = 20
     

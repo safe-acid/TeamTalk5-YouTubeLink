@@ -1,44 +1,13 @@
-from __future__ import print_function, unicode_literals
-from youtube_api import search_you_tube
-import html
 import yt_dlp
-import mpv
 import threading
 import re
+import html
 import json
 from config import Config as conf
 import time
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-
-# Define search_you_tube function
-def search_you_tube(query):
-    try:
-        youtube = build('youtube', 'v3', developerKey=conf.youtubeAPIkey)
-        request = youtube.search().list(
-            part='id,snippet',
-            q=query,
-            maxResults=conf.max_search_number,
-            type='video'
-        )
-        response = request.execute()
-        search_results = []
-        for video in response['items']:
-            title = video["snippet"]["title"]
-            video_id = video["id"]["videoId"]
-            item = {
-                'name': title,
-                'value': f'https://www.youtube.com/watch?v={video_id}',
-            }
-            search_results.append(item)
-        return search_results
-    except HttpError as e:
-        if e.resp.status == 403:
-            error_message = e._get_reason()
-            print(f"Warning: Encountered 403 Forbidden - {error_message}")
-            return None
-        else:
-            raise
+from youtube_oauth import YouTubeOAuth2Handler
+import mpv
+from youtube_api import search_you_tube
 
 class MPV_Controller:
     def __init__(self):
@@ -50,6 +19,13 @@ class MPV_Controller:
         self.is_playing = False
         self.player.volume = conf.max_volume
         self.current_position = 0
+        self.ydl_opts = {
+            'format': 'bestaudio/best',
+            'noplaylist': True,
+            'ignoreerrors': True,
+            'progress_hooks': [self.progress_hook],
+            'extractor_classes': [YouTubeOAuth2Handler]
+        }
 
     def decode_song_name(self, string):
         decoded = html.unescape(string)
@@ -197,16 +173,14 @@ class MPV_Controller:
         return re.match(pattern, link) is not None
 
     def download_audio_url(self, url):
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'noplaylist': True,
-            'ignoreerrors': True,
-        }
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             if info is None:
                 print(f"Error extracting info for URL: {url}")
                 return None
             audio_url = info.get('url')
             return audio_url
+
+    def progress_hook(self, d):
+        if d['status'] == 'finished':
+            self.current_position = 0 

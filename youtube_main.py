@@ -215,7 +215,7 @@ class TTClient:
         current_time = time.time()
         # Check for flooding
         if current_time - self.last_message_time[fromUserID] < conf.msgTimeDelay:
-            self.send_message("Слишком быстро. Подождите немного.", fromUserID, 1)
+            self.send_message(self.get_message("flood_message"), fromUserID, 1)
         else:
             # Update last message time
             self.last_message_time[fromUserID] = current_time
@@ -235,37 +235,37 @@ class TTClient:
                         search_query  = msg[2:].strip()
                         self.mpv.stop_playback()
                         self.send_message(f"{ttstr(fromUserName)} запросил {search_query}", fromUserID, 2) 
-                        self.send_message("Запрашиваем Youtube...", fromUserID, 1)
+                        self.send_message(self.get_message("searching_in_yt"), fromUserID, 1)
                         threading.Thread(target=self.youtube_search_and_play_thread, args=(search_query, fromUserID)).start()
                     #next song
                     elif msg == "+":
-                        self.send_message(f"следующий трек", fromUserID, 1)
+                        self.send_message(self.get_message("next_song"), fromUserID, 1)
                         song_name = self.mpv.play_next_song()
-                        if song_name: 
-                            self.send_message(f"играет: {song_name}", fromUserID, 1)
-                            self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
+                        if song_name:                   
+                            self.send_message(f"{self.get_message('playing')} {song_name}", fromUserID, 1)
+                            self.tt.doChangeStatus(0, ttstr(f"{self.get_message('playing')} {song_name}"))
                     #previous song
                     elif msg == "-":
-                        self.send_message(f"предыдущий трек", fromUserID, 1)
+                        self.send_message(self.get_message("prev_song"), fromUserID, 1)
                         self.mpv.play_previous_song()
                         song_name = self.mpv.play_next_song()
                         if song_name: 
-                            self.send_message(f"играет: {song_name}", fromUserID, 1)
-                            self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
+                            self.send_message(f"{self.get_message('playing')} {song_name}", fromUserID, 1)
+                            self.tt.doChangeStatus(0, ttstr(f"{self.get_message('playing')} {song_name}"))
                     #rewind fwd
                     elif msg.startswith("+") and len(msg) > 1 and self.isPlaying:
                         try:
                             seconds = int(msg[1:])
                             self.mpv.seek_forward(seconds, fromUserID, self.handle_message)
                         except ValueError:
-                            self.send_message("Неверный формат для перемотки вперед. Пожалуйста, введите число после '+'.", fromUserID, 1)
+                            self.send_message(self.get_message("wrong_search_format"), fromUserID, 1)
                     #rewind back
                     elif msg.startswith("-") and len(msg) > 1 and self.isPlaying:
                         try:
                             seconds = int(msg[1:])
                             self.mpv.seek_backward(seconds, fromUserID, self.handle_message)
                         except ValueError:
-                            self.send_message("Неверный формат для перемотки назад. Пожалуйста, введите число после '+'.", fromUserID, 1)
+                            self.send_message(self.get_message("wrong_search_format"), fromUserID, 1)
                     #pause/play
                     elif msg.lower() == "p":
                         self.mpv.pause_resume_playback()

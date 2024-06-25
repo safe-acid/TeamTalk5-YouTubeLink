@@ -7,8 +7,8 @@ messages = {
     },
     
     "help": {
-        "en": "s: search the song name\np: pause\play\n+: next song\n-: previous song\nvX: set up the volume\nspX: set up speed from 1 to 4\npl: show last searches\nplX: play song by ID from last search\nv: about\nq: exit",
-        "ru": "s: поиск песни\np: пауза\воспроизведение\n+: следующий трек\n-: предыдущий трек\nvX: настройка громкости\nspX: настройка скорости от 1 до 4\npl: просмотр последнего поиска\nplX: выбор песни, по номеру из последнего поиска\nv: версия\nq: выход"  
+        "en": "s: search the song name\np: pause\play\n+: next song\n-: previous song\nvX: set up the volume\nspX: set up speed from 1 to 4\npl: show last searches\nplX: play song by ID from last search\n+X: seek forward\n-X: seek backward see\nv: about\nq: exit",
+        "ru": "s: поиск песни\np: пауза\воспроизведение\n+: следующий трек\n-: предыдущий трек\nvX: настройка громкости\nspX: настройка скорости от 1 до 4\npl: просмотр последнего поиска\nplX: выбор песни из последнего поиска\n+X перемотка\n-X перемотка\nv: версия\nq: выход"  
     },
     
      "info": {
@@ -47,5 +47,35 @@ messages = {
     "wrong_speed_format": {
         "en": f"Invalid speed command format. Use 'sp' followed by a number from 0 to 4",
         "ru": f"Неверный формат команды громкости. Используйте 'sp' с числом от 0 до 4"
-    }
+    },
+    
+    "flood_message": {
+        "en": "Too fast, wait a bit.",
+        "ru": "Слишком быстро. Подождите немного."
+    },
+    "searching_in_yt": {
+        "en": "Searching in YouTube...",
+        "ru": "Запрашиваем Youtube..."
+    },
+    "next_song": {
+        "en": "next song",
+        "ru": "следующий трек"
+    },
+    "prev_song": {
+        "en": "previous song",
+        "ru": "предыдущий трек"
+    },
+     "playing": {
+        "en": "playing:",
+        "ru": "играет:"
+    },
+      "wrong_search_format": {
+        "en": "Invalid format. Please enter a number after the '+'.",
+        "ru": "Неверный формат для перемотки вперед. Пожалуйста, введите число после '+'."
+    },
+       "blank": {
+        "en": "",
+        "ru": ""
+    },
+        
 }

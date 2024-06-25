@@ -1,11 +1,7 @@
 from config import Config as conf
 
 messages = {
-    "help_top": {
-        "en": "Radio Selection:\n",
-        "ru": "Выбор Радио:\n"
-    },
-    
+   
     "help": {
         "en": "s: search the song name\np: pause\play\n+: next song\n-: previous song\nvX: set up the volume\nspX: set up speed from 1 to 4\npl: show last searches\nplX: play song by ID from last search\n+X: seek forward\n-X: seek backward see\nv: about\nq: exit",
         "ru": "s: поиск песни\np: пауза\воспроизведение\n+: следующий трек\n-: предыдущий трек\nvX: настройка громкости\nspX: настройка скорости от 1 до 4\npl: просмотр последнего поиска\nplX: выбор песни из последнего поиска\n+X перемотка\n-X перемотка\nv: версия\nq: выход"  

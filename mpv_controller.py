@@ -2,20 +2,23 @@ from __future__ import print_function, unicode_literals
 from youtube_api import search_you_tube
 import html
 import yt_dlp
-import mpv
+import mpv_module
 import threading
 import re
 import json
 from config import Config as conf
 import time
 
+
+
 class MPV_Controller:
     def __init__(self):
+       
         self.current_song_index = 0
         self.songs = []
         self.names = []
         self.playURL = False
-        self.player = mpv.MPV(ytdl=True)
+        self.player = mpv_module.MPV(ytdl=True)
         self.is_playing = False
         self.player.volume = conf.max_volume
         self.current_position = 0
@@ -34,8 +37,9 @@ class MPV_Controller:
 
     def write_search_results_to_file(self):
         search_results = [{"name": name, "url": url} for name, url in zip(self.names, self.songs)]
-        with open('search_list.json', 'w') as f:
+        with open('search_list.json', 'w', encoding='utf-8') as f:  # Specify UTF-8 encoding here
             json.dump(search_results, f, ensure_ascii=False, indent=4)
+
 
     def youtube_search_and_play(self, query):
         if self.is_valid_youtube_link(query):

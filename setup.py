@@ -13,6 +13,9 @@ FILE_NAMES = {
     "Darwin": "tt5sdk_v5.15a_macos_x86_64.7z",
     "Windows": "tt5sdk_v5.15a_win64.7z"
 }
+# Windows-specific file download URL
+DLL_FILE_URL = "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-v3-20240623-git-265056f.7z/download"
+
 
 
 def download_file(url, filename):
@@ -64,6 +67,36 @@ def essential_sdk(sdk_dir):
                 os.remove(item_path)
     print(f"Kept only essential files and directories in {sdk_dir}.")
 
+def install_dll_for_windows():
+    """Download and extract specific DLL for Windows, then move the DLL to the project root and clean up."""
+    if platform.system() == "Windows":
+        print("Downloading MPV DLL for Windows")
+        #using along with mpv 1.0.7
+        filename = "mpv-dev-x86_64-v3-20240623-git-265056f.7z"
+        local_path = os.path.join(os.getcwd(), filename)
+        extract_dir = os.path.join(os.getcwd(), "extracted_dll")
+
+        # Download and extract DLL
+        download_file(DLL_FILE_URL, local_path)
+        print("Extracting downloaded DLL")
+        extract_archive(local_path, extract_dir)
+        
+
+        # Move DLL to project root and clean up
+        dll_path = os.path.join(extract_dir, "libmpv-2.dll")
+        if os.path.exists(dll_path):
+            shutil.move(dll_path, os.getcwd())  # Move the DLL to the project root
+            print(f"Moved 'libmpv-2.dll' to {os.getcwd()}.")
+        else:
+            print("DLL file not found after extraction.")
+
+        # Remove the extracted directory
+        if os.path.exists(extract_dir):
+            shutil.rmtree(extract_dir)
+            print(f"Deleted {extract_dir} directory.")
+
+        print("DLL installation complete!")
+        
 def install_sdk():
     print("Downloading SDK")
     """Downloads, extracts, and installs the TeamTalk SDK."""
@@ -101,3 +134,4 @@ if __name__ == "__main__":
     
     # Install the TeamTalk SDK
     install_sdk()
+    install_dll_for_windows()

@@ -2,7 +2,7 @@ class Config:
     #Version
     version = "1.0"
     sdk = "SDK 5.15a"
-    
+
     #Server settings
     host = ""
     tcpPort = 10555
@@ -24,8 +24,7 @@ class Config:
     msgTimeDelay = 5
     
     #YouTube Api Key
-    youtubeAPIkey = str("")
-    
+    youtubeAPIkey = str("")  
     #Max search result per one request - INT
     max_search_number = 20
     

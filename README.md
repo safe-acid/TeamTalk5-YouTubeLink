@@ -20,11 +20,12 @@ python setup.py
 ```
 Linux:
 ```shell script
-sudo apt install -y pulseaudio
+sudo apt install -y pulseaudio libmpv-dev
 ```
 Mac:
 ```shell script
 brew install pulseaudio
+brew install mpv
 ```
 ## 2. Set Up Audio Device ID
 Define Audio Device ID by running the command

@@ -61,8 +61,7 @@ The default langauge is English, if you want to run on Russian use command
 python youtube_main.py --language ru
 ```
 
-### Release notes version:
-1.0 - initial release
+### Notes:
 
 Telegram - <a href="https://t.me/TT5Link"> TT5Link</a>
 

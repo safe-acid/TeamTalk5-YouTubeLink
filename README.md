@@ -18,20 +18,13 @@ Download essentiial TeamTalk5 SDK using the command
 ```shell script
 python setup.py
 ```
-Windows:
-
-mpv - Download the installer or portable version from <a href="https://mpv.io/installation/"> mpv.io</a>
-
-libmpv - Download the installer or portable version from <a href="https://mpv.io/installation/"> libmpv </a>
-
-
 Linux:
 ```shell script
-sudo apt install -y pulseaudio mpv libmpv-dev
+sudo apt install -y pulseaudio
 ```
 Mac:
 ```shell script
-brew install pulseaudio mpv libmpv
+brew install pulseaudio
 ```
 ## 2. Set Up Audio Device ID
 Define Audio Device ID by running the command

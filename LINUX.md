@@ -110,4 +110,8 @@ nano config.py
 python3 youtube_main.py
 ```
 
-Good Luck: Котяра 🐾
+# Notes:
+Telegram - <a href="https://t.me/TT5Link"> TT5Link</a>
+
+Good Luck:
+Котяра 

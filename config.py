@@ -30,9 +30,7 @@ class Config:
     
     
     
-             
-
-
+            
     #Example
     # host = "46.89.217.170"
     # tcpPort = 10333

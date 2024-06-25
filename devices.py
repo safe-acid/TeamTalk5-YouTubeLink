@@ -10,6 +10,7 @@ def defaultAudioDevices():
                f"Device Name: {ttstr(device.szDeviceName)},\n\n " \
 
         print(msg)
+ 
         
 if __name__ == "__main__":
     defaultAudioDevices()

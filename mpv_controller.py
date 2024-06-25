@@ -73,7 +73,7 @@ class MPV_Controller:
         self.player.play(url)
         self.player.wait_for_playback()
         self.is_playing = False
-    #TODO
+    ## TODO
     # def check_playback_status(self):
     #     while True:
     #         if self.is_playing:

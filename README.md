@@ -64,7 +64,7 @@ python youtube_main.py --language ru
 ### Release notes version:
 1.0 - initial release
 
-Telegram - <a href="https://t.me/TT5Link"> TT5RadioLink</a>
+Telegram - <a href="https://t.me/TT5Link"> TT5Link</a>
 
 Good Luck:
 Котяра 🐾

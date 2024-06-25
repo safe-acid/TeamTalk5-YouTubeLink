@@ -88,12 +88,14 @@ def install_sdk():
         extract_dir = os.path.join(sdk_dir, "extracted_temp")
 
         download_file(download_url, local_path)
+        print("Extracting downloaded files")
         extract_archive(local_path, extract_dir)
         move_files_to_sdk(extract_dir, sdk_dir)  # Move files to sdk directory
         essential_sdk(sdk_dir)  # Keep only the essential files and directories
 
         print("TeamTalk SDK installation complete!")
-        print("You can run command\n python youtube_main.py --devices\n define your sound device and save ID in config.py")
+        print("You can run command\n python devices.py")
+        print("Define your input sound device and save ID in\n config.py")
 
 if __name__ == "__main__":
     

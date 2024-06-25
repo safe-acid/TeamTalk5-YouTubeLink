@@ -4,12 +4,12 @@ class Config:
     sdk = "SDK 5.15a"
     
     #Server settings
-    host = "46.36.217.170"
+    host = ""
     tcpPort = 10555
     udpPort = 10555
-    botName = "YouTubeBot"
-    username = "open"
-    password = "open"
+    botName = ""
+    username = ""
+    password = ""
     ChannelName = "/"
     ChannelPassword = ""
     
@@ -24,7 +24,7 @@ class Config:
     msgTimeDelay = 5
     
     #YouTube Api Key
-    youtubeAPIkey = str("AIzaSyCU6L_4VxmBRwsEQS8ApKwuWSOqgayP118")
+    youtubeAPIkey = str("")
     
     #Max search result per one request - INT
     max_search_number = 20

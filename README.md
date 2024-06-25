@@ -19,10 +19,10 @@ Download essentiial TeamTalk5 SDK using the command
 python setup.py
 ```
 Windows:
+```shell script
 mpv - Download the installer or portable version from <a href="https://mpv.io/installation/"> mpv.io</a>
-
 libmpv - Download the installer or portable version from <a href="https://mpv.io/installation/"> libmpv </a>
-
+```
 Linux:
 ```shell script
 sudo apt install -y pulseaudio mpv libmpv-dev

@@ -23,10 +23,10 @@ sudo apt install python3-pip
 ```shell script
 sudo apt install git
 ```
-### Install pulse audio
+### Install pulse audio, mpv and libmpv-dev
 Linux
 ```shell script
-sudo apt install -y pulseaudio
+sudo apt install -y pulseaudio mpv libmpv-dev
 ```
 
 ### Start pulseaudio

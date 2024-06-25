@@ -1,5 +1,5 @@
 # TeamTalk5-YouTubeLink
-This is a simple radio player for TeamTalk5 with predefined radio stations. Use your own stations as you wish. The bot will reconnect automatically if the server is rebooted.
+This is a simple YouTube Player for TeamTalk5. YouTube Data API v3 is used for best search. The bot will reconnect automatically if the server is rebooted.
 
 ### Minimum requirements:
 * Windows 10/11       x64

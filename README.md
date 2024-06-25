@@ -19,8 +19,11 @@ Download essentiial TeamTalk5 SDK using the command
 python setup.py
 ```
 Windows:
+
 mpv - Download the installer or portable version from <a href="https://mpv.io/installation/"> mpv.io</a>
+
 libmpv - Download the installer or portable version from <a href="https://mpv.io/installation/"> libmpv </a>
+
 
 Linux:
 ```shell script
@@ -38,7 +41,7 @@ python devices.py
 
 ## 3. Configure Settings
 Update your Audio ID and server's settings in config.py file and API Key.
-API key could be created for free in <a href = "https://console.cloud.google.com/" Google Cloud Console</a>
+API key could be created for free in <a href = "https://console.cloud.google.com/"> Google Cloud Console</a>
 Menu -> APIs & Servces -> Creditants
 
 Check if YouTube Data API v3 is enabled, go to:

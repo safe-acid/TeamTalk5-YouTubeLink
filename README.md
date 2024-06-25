@@ -68,14 +68,14 @@ python youtube_main.py --language ru
 3. [+] - Play next song
 4. [-] - Play previous song
 5. [+X] - seeking forward 
-    - example or seeking forward to 30 seconds: ** +30
+    - example or seeking forward to 30 seconds: +30
 6. [-X] - seeking backward
     - example or seeking backward to 30 seconds: -30
-7. [pl] - showling last search result 
+7. [pl] - showing last searched results
 8. [plX] - play song from search result bu ID
     - example of playing song no 10: pl10
-9. [sp] - chnage speed from 1 to 4
-    - example of play 2 times faster sp2  
+9. [sp] - change of speed from 1 to 4
+    - example of playing 2 times faster: sp2  
 9. [v] - version
 9. [q] - quit the bot     
 

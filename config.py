@@ -29,7 +29,6 @@ class Config:
     max_search_number = 20
     
     
-    
              
 
 

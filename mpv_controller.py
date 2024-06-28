@@ -94,7 +94,7 @@ class MPV_Controller:
                 self.current_position = self.player.playback_time
                 if total_duration is not None and self.current_position is not None:
                     remaining_time = int(round(total_duration - self.current_position))
-                    print(f"song remaining time -> {remaining_time}")
+                    #print(f"song remaining time -> {remaining_time}")
                     self.update_nickname_callback(self.formatted_time(remaining_time))
                     if remaining_time <= 3:
                         self.play_next_song()

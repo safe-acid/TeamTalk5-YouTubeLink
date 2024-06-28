@@ -9,7 +9,8 @@ messages = {
     
      "info": {
         "en": "\"h\" help",
-        "ru": "\"h\" справка"
+        "ru": "\"h\" справка",
+        "es": "spanish here"
     },
     
     "about": {

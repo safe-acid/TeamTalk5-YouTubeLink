@@ -1,6 +1,6 @@
 class Config:
     #Version
-    version = "1.0"
+    version = "1.1"
     sdk = "SDK 5.15a"
 
     #Server settings
@@ -30,7 +30,9 @@ class Config:
     
     
     
-            
+             
+
+
     #Example
     # host = "46.89.217.170"
     # tcpPort = 10333

@@ -4,14 +4,12 @@ from typing import Optional
 from messages import messages
 from mpv_controller import MPV_Controller
 from collections import defaultdict
-import library 
+import library
 from library import ttstr
-
 
 # Add logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 class TTClient:
     def __init__(self, host, tcpPort, udpPort, nickName, userName, password):
@@ -32,11 +30,10 @@ class TTClient:
         self.reconnect_thread.start()
         self.admin = conf.admin  # Initialize the admin flag
         self.last_message_time = defaultdict(lambda: 0)  # Track last message time for each user
-        #instance of MPV_Controller
-        self.mpv = MPV_Controller()
-    
-            
-            
+
+        # Instance of MPV_Controller with the callback
+        self.mpv = MPV_Controller(self.update_nickname_with_remaining_time, self.update_status_with_song_name)
+
     def enable_voice_transmission(self) -> None:
         self.tt.enableVoiceTransmission(True)
         
@@ -50,7 +47,7 @@ class TTClient:
         self.tt.connect(self.host, self.tcpPort, self.udpPort)
 
     def onConnectSuccess(self):
-        self.connected = True #Connection established
+        self.connected = True # Connection established
         self.tt.doLogin(self.nickName, self.userName, self.password, ttstr("ttsamplepy"))
         time.sleep(1)
               
@@ -64,8 +61,7 @@ class TTClient:
     def set_input_device(self, id: int) -> None:
         self.tt.initSoundInputDevice(id)  
     
- 
-    def onCmdMyselfLoggedIn(self,userID, userAccount):
+    def onCmdMyselfLoggedIn(self, userID, userAccount):
         print(f"Hello {userAccount.szUsername}. Your User ID is {userID}")
         time.sleep(2.0)
         channelID = self.tt.getChannelIDFromPath(ttstr(conf.ChannelName))
@@ -79,8 +75,17 @@ class TTClient:
          print(f"Channel message in channelid {ttstr(channelID)} from userid {ttstr(fromUserID)} username: {ttstr(fromUserName)} {ttstr(msgText)}")
 
     def change_nickname(self, nickname):
-           self.tt.doChangeNickname(ttstr(nickname))
-    
+        self.tt.doChangeNickname(ttstr(nickname))
+    #call back function 
+    def update_nickname_with_remaining_time(self, remaining_time):
+        new_nickname = f"{ttstr(self.nickName)} {remaining_time}"
+        self.change_nickname(new_nickname)
+     #callback function    
+    def update_status_with_song_name(self, name):
+        print("trying change status")
+        self.tt.doChangeStatus(0, ttstr(name) )
+        
+
     def onCmdUserTextMessage(self, message):
         msgType = message.nMsgType
         if msgType == library.TeamTalk5.TextMsgType.MSGTYPE_USER:
@@ -90,25 +95,25 @@ class TTClient:
         if msgType == library.TeamTalk5.TextMsgType.MSGTYPE_BROADCAST:
             self.onBroadcastMessage(message.nFromUserID, message.szFromUsername, message.szMessage)  
     
-    #grabbing users in channels
+    # Grabbing users in channels
     def get_users_in_channels(self):
-          user_ids = []
-          bot_chanelId = self.tt.getMyChannelID()
-          users_in_channel = self.tt.getChannelUsers(bot_chanelId)
-          #Check if users_in_channel is not None and access user information accordingly
-          if users_in_channel is not None:
-           for user in users_in_channel:
-            # Append each user ID to the list
+        user_ids = []
+        bot_chanelId = self.tt.getMyChannelID()
+        users_in_channel = self.tt.getChannelUsers(bot_chanelId)
+        # Check if users_in_channel is not None and access user information accordingly
+        if users_in_channel is not None:
+            for user in users_in_channel:
+                # Append each user ID to the list
                 user_ids.append(user.nUserID)       
-          return user_ids
+        return user_ids
       
-    #checking is user who sent message in channel
+    # Checking is user who sent message in channel
     def userID_inChannel(self, id_to_check):
-    # Call the function to get the list of user IDs
-       user_ids = self.get_users_in_channels()    
-       if id_to_check in user_ids:
-          return True
-       return False 
+        # Call the function to get the list of user IDs
+        user_ids = self.get_users_in_channels()    
+        if id_to_check in user_ids:
+            return True
+        return False 
    
     def isUserAdmin(self, user_id):
         user = self.tt.getUser(user_id)
@@ -129,25 +134,25 @@ class TTClient:
             return "Message not found."
     
     def dynamic_nick(self):
-            self.change_nickname(f"{conf.botName}" )
-            self.tt.doChangeStatus(0, ttstr(self.get_message("info")))   
+        self.change_nickname(f"{conf.botName}")
+        self.tt.doChangeStatus(0, ttstr(self.get_message("info")))   
     
-    #player status        
+    # Player status        
     def isPlaying(self):
         if self.mpv.player_status == "playing":
             return True
-    #player status        
+
+    # Player status        
     def isPaused(self):
         if self.mpv.player_status == "paused":
             return True
-    #player status        
+
+    # Player status        
     def isStop(self):
         if self.mpv.player_status == "stopped":
             return True
     
-    def send_message(
-        self, text: str, user: Optional[library.User] = None, type: int = 1
-        ) -> None:
+    def send_message(self, text: str, user: Optional[library.User] = None, type: int = 1) -> None:
         message = library.TeamTalk5.TextMessage()
         message.nFromUserID = self.tt.getMyUserID()
         message.nMsgType = type
@@ -159,11 +164,10 @@ class TTClient:
             else:
                 message.nToUserID = user.id
         elif type == 2:
-                message.nChannelID = self.tt.getMyChannelID()
+            message.nChannelID = self.tt.getMyChannelID()
         self.tt.doTextMessage(message)
     
-    
-    #read search_list.json
+    # Read search_list.json
     def read_search_results(self):
         try:
             with open('search_list.json', 'r') as f:
@@ -171,10 +175,7 @@ class TTClient:
         except FileNotFoundError:
             return []
 
-    #***********************************************
-    #******** working with searh_list.json**********
-    #***********************************************
-    #prepare list to user check the list - command pl
+    # Prepare list to user check the list - command pl
     def send_search_results(self, fromUserID):
         search_results = self.read_search_results()
         global_index = 1
@@ -184,29 +185,23 @@ class TTClient:
             global_index += len(chunk)
             self.send_message(message, fromUserID, 1)
 
-    #get song by ID from search_json
+    # Get song by ID from search_json
     def get_song_by_number(self, number):
         search_results = self.read_search_results()
         if 1 <= number <= len(search_results):
             return search_results[number - 1]
         else:
-            return None  
-    #play song by ID
+            return None
+
+    # Play song by ID
     def play_song_by_number(self, fromUserID, number):
         song = self.get_song_by_number(number)
         if song:
             song_name = song['name']
             song_url = song['url']
             threading.Thread(target=self.youtube_search_and_play_thread, args=(song_url, fromUserID, song_name)).start()
-            
         else:
             self.send_message("Invalid song number. Please try again.", fromUserID, 1)        
-    #***********************************************
-    #******** working with searh_list.json**********
-    #***********************************************        
-    
-    
-    
     
     def onUserMessage(self, fromUserID, fromUserName, msg):
         anonymous = self.anonymous(fromUserName)
@@ -220,63 +215,62 @@ class TTClient:
             # Update last message time
             self.last_message_time[fromUserID] = current_time
 
-            #user must be in chanel and not anonymous
+            # User must be in channel and not anonymous
             if anonymous and userInChanel:
                 if self.isUserAdmin(fromUserID) or not self.admin:
-                    
-                    #about
-                    if  msg.lower() == "v":
-                        self.send_message(self.get_message("about"),fromUserID,1) 
-                    #help
+                    # About
+                    if msg.lower() == "v":
+                        self.send_message(self.get_message("about"), fromUserID, 1)
+                    # Help
                     elif msg.lower() == "h":
-                        self.send_message(self.get_message("help"),fromUserID,1) 
-                    #search and ply   
+                        self.send_message(self.get_message("help"), fromUserID, 1)
+                    # Search and play   
                     elif msg.lower().startswith("s ") and len(msg.lower()) > 4:
                         search_query  = msg[2:].strip()
                         self.mpv.stop_playback()
-                        self.send_message(f"{ttstr(fromUserName)} запросил {search_query}", fromUserID, 2) 
+                        self.send_message(f"{ttstr(fromUserName)} запросил {search_query}", fromUserID, 2)
                         self.send_message(self.get_message("searching_in_yt"), fromUserID, 1)
                         threading.Thread(target=self.youtube_search_and_play_thread, args=(search_query, fromUserID)).start()
-                    #next song
+                    # Next song
                     elif msg == "+":
                         self.send_message(self.get_message("next_song"), fromUserID, 1)
                         song_name = self.mpv.play_next_song()
                         if song_name:                   
                             self.send_message(f"{self.get_message('playing')} {song_name}", fromUserID, 1)
-                            self.tt.doChangeStatus(0, ttstr(f"{self.get_message('playing')} {song_name}"))
-                    #previous song
+                            # self.tt.doChangeStatus(0, ttstr(f"{song_name}"))
+                    # Previous song
                     elif msg == "-":
                         self.send_message(self.get_message("prev_song"), fromUserID, 1)
-                        self.mpv.play_previous_song()
-                        song_name = self.mpv.play_next_song()
-                        if song_name: 
+        
+                        song_name = self.mpv.play_previous_song()
+                        if song_name:
                             self.send_message(f"{self.get_message('playing')} {song_name}", fromUserID, 1)
-                            self.tt.doChangeStatus(0, ttstr(f"{self.get_message('playing')} {song_name}"))
-                    #rewind fwd
+                            #self.tt.doChangeStatus(0, ttstr(f"{song_name}"))
+                    # Rewind forward
                     elif msg.startswith("+") and len(msg) > 1 and self.isPlaying:
                         try:
                             seconds = int(msg[1:])
                             self.mpv.seek_forward(seconds, fromUserID, self.handle_message)
                         except ValueError:
                             self.send_message(self.get_message("wrong_search_format"), fromUserID, 1)
-                    #rewind back
+                    # Rewind backward
                     elif msg.startswith("-") and len(msg) > 1 and self.isPlaying:
                         try:
                             seconds = int(msg[1:])
                             self.mpv.seek_backward(seconds, fromUserID, self.handle_message)
                         except ValueError:
                             self.send_message(self.get_message("wrong_search_format"), fromUserID, 1)
-                    #pause/play
+                    # Pause/play
                     elif msg.lower() == "p":
                         self.mpv.pause_resume_playback()
-                    #quit
+                    # Quit
                     elif msg.lower() == "q":
                         self.disable_voice_transmission()
                         self.mpv.stop_playback()
                         self.send_message(f"бот уснул", fromUserID, 1)
                         self.tt.doChangeStatus(0, ttstr(self.get_message("info")))  
-                    #adjust speed 
-                    elif msg.lower().startswith("sp") and len(msg) > 2:  # Check for at least one digit after "v"
+                    # Adjust speed 
+                    elif msg.lower().startswith("sp") and len(msg) > 2:  # Check for at least one digit after "sp"
                         try:
                             speed = float(msg[2:]) 
                             if 1 <= speed <= 4.:
@@ -286,8 +280,7 @@ class TTClient:
                                 self.send_message(self.get_message("wrong_speed"), fromUserID, 1)
                         except ValueError:
                             self.send_message((self.get_message("wrong_speed_format")), fromUserID, 1)    
-                           
-                    #volume control
+                    # Volume control
                     elif msg.lower().startswith("v") and len(msg) > 1:  # Check for at least one digit after "v"
                         try:
                             volume_level = int(msg[1:])  # Extract digits after "v"
@@ -298,29 +291,25 @@ class TTClient:
                                 self.send_message(self.get_message("wrong_volume"), fromUserID, 1)
                         except ValueError:
                             self.send_message((self.get_message("wrong_volume_format")), fromUserID, 1)  
-                    
-                    #show saved searhed play list
+                    # Show saved search playlist
                     elif msg.lower() == "pl":
                         self.send_search_results(fromUserID)
-                        
-                    #play from last seareche play list
+                    # Play from last searched playlist
                     elif msg.lower().startswith("pl") and len(msg) > 2:
-                        song_number = int(msg[2:])  # Extract digits after "v"
+                        song_number = int(msg[2:])  # Extract digits after "pl"
                         self.play_song_by_number(fromUserID, song_number)                     
-    #enf of def onUserMessage
-    
-    
-    #serach an play thread
-    def youtube_search_and_play_thread(self, query, fromUserID, song_name = None):
-        song= self.mpv.youtube_search_and_play(query) 
+
+    # Search and play thread
+    def youtube_search_and_play_thread(self, query, fromUserID, song_name=None):
+        song = self.mpv.youtube_search_and_play(query)
         if song:
             self.enable_voice_transmission()
-            #if user playing from saved search_list argument song_name is passed
-            #if playing from search passs the song as argument 
-            if song_name == None:
-                song_name =  song       
+            # If user playing from saved search_list argument song_name is passed
+            # If playing from search pass the song as argument 
+            if song_name is None:
+                song_name = song       
             self.send_message(f"играет: {song_name}", fromUserID, 1)
-            self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
+            #self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
         else:
             self.send_message(f"ничего не найдено", fromUserID, 1)                               
     
@@ -328,19 +317,17 @@ class TTClient:
     def handle_message(self, message, fromUserID):
         self.send_message(message, fromUserID, 1)
         
-    #reconnect 
+    # Reconnect
     def reconnect_loop(self):
         while True:   
-                if not self.connected:
-                    logger.info("Attempting to reconnect...")
-                    self.tt.disconnect()
-                    time.sleep(2)
+            if not self.connected:
+                logger.info("Attempting to reconnect...")
+                self.tt.disconnect()
+                time.sleep(2)
                 # Attempt to reconnect
-                    self.connect()
-                time.sleep(self.reconnect_delay)    
-    
+                self.connect()
+            time.sleep(self.reconnect_delay)    
 
-              
 if __name__ == "__main__":
     try:
         parser = argparse.ArgumentParser(description='Process some integers.')
@@ -350,7 +337,6 @@ if __name__ == "__main__":
         # Set current_language based on the argument
         if args.language == "ru":
             current_language = "ru"
-        #if need your other language     
         elif args.language == "en":
             current_language = "en"
         else:

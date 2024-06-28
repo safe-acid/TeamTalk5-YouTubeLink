@@ -55,8 +55,9 @@ The default langauge is English, if you want to run on Russian use command
 python youtube_main.py --language ru
 ```
 ## Commands
-1. [s] - searching and playing the song from YouTube
-    - example: s Metallica
+1. [s] - searching and playing the song from YouTube, you could drop youtube links and live links as well
+    - example: s Metallica 
+    - example: s https://www.youtube.com/watch?v=X4bgXH3sJ2Q
 
 2. [p] - play\pause
 3. [+] - play next song

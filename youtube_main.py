@@ -82,7 +82,6 @@ class TTClient:
         self.change_nickname(new_nickname)
      #callback function    
     def update_status_with_song_name(self, name):
-        print("trying change status")
         self.tt.doChangeStatus(0, ttstr(name) )
         
 

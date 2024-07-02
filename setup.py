@@ -5,6 +5,7 @@ import requests
 from urllib.parse import urljoin
 import shutil
 import py7zr
+import platform
 
 # Define base URL and list of file names (modify if needed)
 BASE_URL = "http://www.bearware.dk/teamtalksdk/v5.15a/"
@@ -14,8 +15,12 @@ FILE_NAMES = {
     "Windows": "tt5sdk_v5.15a_win64.7z"
 }
 # Windows-specific file download URL
-DLL_FILE_URL = "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-v3-20240623-git-265056f.7z/download"
-
+# Determine the appropriate DLL file URL based on the system architecture
+if platform.system() == "Windows":
+    if platform.architecture()[0] == "64bit":
+        DLL_FILE_URL = "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20240630-git-68a1a38.7z/download"
+    else:
+        DLL_FILE_URL = "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-i686-20240630-git-68a1a38.7z/download"
 
 
 def download_file(url, filename):

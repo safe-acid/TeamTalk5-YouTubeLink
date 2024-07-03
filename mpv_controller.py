@@ -24,6 +24,9 @@ class MPV_Controller:
         self.playback_thread.start()
         self.update_nickname_callback = update_nickname_callback
         self.update_song_name_callback = update_song_name_callback
+        #favorite vars init
+        self.current_song_name = None
+        self.current_song_url = None
 
     def decode_song_name(self, string):
         decoded = html.unescape(string)
@@ -52,6 +55,7 @@ class MPV_Controller:
                 self.songs = [f'https://www.youtube.com/watch?v={video_id}']
                 self.names = [query]
                 self.songName = query
+               
         else:
             self.playURL = False
             search_results = search_you_tube(query)
@@ -70,6 +74,12 @@ class MPV_Controller:
             print(song_list)
             self.songName = song_name
             self.update_song_name_callback(self.songName)
+            
+            #song name for favorite
+            self.current_song_name = song_name
+            #song url for favorite
+            self.current_song_url = self.songs[self.current_song_index]
+            
             if not self.playURL:
                 self.write_search_results_to_file()
             return song_name
@@ -81,7 +91,7 @@ class MPV_Controller:
         self.is_playing = True
         self.current_position = 0
         print(f"Playing audio: {url}")
-        self.player.play(url)   
+        self.player.play(url) 
         # time.sleep(5)
         # self.player.wait_for_playback()
         # print("Playback finished")
@@ -107,12 +117,14 @@ class MPV_Controller:
         self.current_song_index = (self.current_song_index + 1) % len(self.songs)
         if self.current_song_index == 0:
             song_name = "No more songs in the playlist."
-          
+        
             return song_name
         else:
             song_name = self.decode_song_name(self.names[self.current_song_index])
             audio_url = self.download_audio_url(self.songs[self.current_song_index])
             print(song_name)
+            self.current_song_name = song_name
+            self.current_song_url = self.songs[self.current_song_index]
             self.songName = song_name
             self.update_song_name_callback(self.songName)
             threading.Thread(target=self.play_audio, args=(audio_url,)).start()
@@ -128,6 +140,8 @@ class MPV_Controller:
             self.current_song_index = len(self.songs) - 1
         song_name = self.decode_song_name(self.names[self.current_song_index])
         audio_url = self.download_audio_url(self.songs[self.current_song_index])
+        self.current_song_name = song_name
+        self.current_song_url = self.songs[self.current_song_index]
         threading.Thread(target=self.play_audio, args=(audio_url,)).start()
         print(song_name)
         self.songName = song_name

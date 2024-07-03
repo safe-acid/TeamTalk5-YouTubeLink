@@ -223,11 +223,12 @@ class TTClient:
                     # Help
                     elif msg.lower() == "h":
                         self.send_message(self.get_message("help"), fromUserID, 1)
+                        self.send_message(self.get_message("help1"), fromUserID, 1)
                     # Search and play   
                     elif msg.lower().startswith("s ") and len(msg.lower()) > 4:
                         search_query  = msg[2:].strip()
                         self.mpv.stop_playback()
-                        self.send_message(f"{ttstr(fromUserName)} запросил {search_query}", fromUserID, 2)
+                        self.send_message(f"{ttstr(fromUserName)}{self.get_message('requested')}{search_query}", fromUserID, 2)
                         self.send_message(self.get_message("searching_in_yt"), fromUserID, 1)
                         threading.Thread(target=self.youtube_search_and_play_thread, args=(search_query, fromUserID)).start()
                     # Next song
@@ -296,8 +297,155 @@ class TTClient:
                     # Play from last searched playlist
                     elif msg.lower().startswith("pl") and len(msg) > 2:
                         song_number = int(msg[2:])  # Extract digits after "pl"
-                        self.play_song_by_number(fromUserID, song_number)                     
+                        self.play_song_by_number(fromUserID, song_number)  
+                    
+                    #check i admin allows user fav list for all users or selectged
+                    if not conf.favUsers or ttstr(fromUserName) in conf.favUsers:       
+                          
+                        # add song to favorite
+                        if msg.lower() == "f+":
+                            current_song_name = self.mpv.current_song_name  # You need to implement this attribute in your MPV_Controller
+                            current_song_url = self.mpv.current_song_url  # Likewise, this needs to be implemented
+                            self.add_to_favorites(fromUserID, fromUserName, current_song_name, current_song_url)
+                        # get fav list
+                        elif msg.lower() == "fl":
+                            self.get_fav_songs_list(fromUserID,fromUserName)
+                        # delete item from favorite
+                        elif msg.lower().startswith("f-"):
+                            song_number_str = msg[2:].strip() 
+                            if song_number_str.isdigit():
+                                song_number = int(song_number_str)
+                                self.delete_favorite_song(fromUserID, fromUserName, song_number)
+                            else:
+                                self.send_message(f'{self.get_message('fav_invalid_song')} f-.', fromUserID, 1)                   
+                        # play song from from favorite list
+                        elif msg.lower().startswith("fp"):
+                            song_number_str = msg[2:].strip() 
+                            if song_number_str.isdigit():
+                                song_number = int(song_number_str)
+                                self.play_fav_song_by_number(fromUserID, fromUserName, song_number)
+                            else:
+                                self.send_message(f'{self.get_message('fav_invalid_song')} fp.', fromUserID, 1)
+                    
+                                             
+    # user add song to favorite
+    def add_to_favorites(self, fromUserID, fromUserName, song_name, song_url):
+        # Create the directory if it does not exist
+        favorites_dir = os.path.join(os.getcwd(), 'favorites')
+        os.makedirs(favorites_dir, exist_ok=True)
 
+        # Define the file path
+        file_path = os.path.join(favorites_dir, f"{ttstr(fromUserName)}.json")
+
+        # Check if the file exists
+        if os.path.exists(file_path):
+            # Read the existing data
+            with open(file_path, 'r', encoding='utf-8') as file:
+                favorites = json.load(file)
+        else:
+            # Initialize an empty list if the file does not exist
+            favorites = []
+       
+        if len(favorites) >= conf.maxFavItems:
+            self.send_message(f'{self.get_message('fav_limit_error')} {conf.maxFavItems}', fromUserID, 1)
+            return
+                 
+        # Append the new favorite song
+        favorites.append({
+            "name": song_name,
+            "url": song_url
+        })
+
+        # Write the updated list back to the file
+        with open(file_path, 'w', encoding='utf-8') as file:
+            json.dump(favorites, file, indent=4, ensure_ascii=False)
+
+        # Notify the user
+        self.send_message(self.get_message('fav_song_added'), fromUserID, 1)
+        
+    #get favorities list 
+    def get_fav_songs_list(self, fromUserID, fromUserName):
+    
+        filepath = os.path.join('favorites', f'{ttstr(fromUserName)}.json')
+        # Check if the file exists
+        if not os.path.exists(filepath):
+            self.send_message(self.get_message('fav_no_list'), fromUserID, 1)
+            return
+        try:
+            # Load the favorites from the file
+            with open(filepath, 'r', encoding='utf-8') as f:
+                favorites = json.load(f)           
+            # Check if there are any favorites
+            if not favorites:
+                self.send_message(self.get_message('fav_empty_list'), fromUserID, 1)
+                return
+            # Send the favorites in chunks of 3 songs
+            global_index = 1
+            for i in range(0, len(favorites), 3):
+                chunk = favorites[i:i + 3]
+                message = "\n".join([f"{global_index + j}. {item['name']}" for j, item in enumerate(chunk)])
+                self.send_message(message, fromUserID, 1)
+                global_index += len(chunk)
+        except json.JSONDecodeError:
+            self.send_message(self.get_message('fav_format_err'), fromUserID, 1)
+        except Exception as e:
+            self.send_message(f"An error occurred: {str(e)}", fromUserID, 1)
+            
+    #delete song from favorities
+    def delete_favorite_song(self, fromUserID, fromUserName, song_number):
+        
+        file_path = os.path.join('favorites', f'{ttstr(fromUserName)}.json')
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                favorites = json.load(file)
+            if 1 <= song_number <= len(favorites):
+                removed_song = favorites.pop(song_number - 1)  # Adjust for zero-based index
+                with open(file_path, 'w', encoding='utf-8') as file:
+                    json.dump(favorites, file, indent=4, ensure_ascii=False)
+                self.send_message(f"{self.get_message('fav_del')} {removed_song['name']}", fromUserID, 1)
+            else:
+                self.send_message("Invalid song number. Please check the favorite list and try again, use command: fl", fromUserID, 1)
+        else:
+            self.send_message("No favorites list found.", fromUserID, 1) 
+            return None
+
+    # Play favorite sng song by ID
+    def play_fav_song_by_number(self, fromUserID, fromUserName, number):
+        song = self.get_fav_song_by_number(fromUserName, number)
+    
+        if song:
+            song_name = song['name']
+            song_url = song['url']
+            threading.Thread(target=self.youtube_search_and_play_thread, args=(song_url, fromUserID, song_name)).start()
+        else:
+            self.send_message(self.get_message('fav_inval_err'), fromUserID, 1) 
+    
+    # Get favoritge song by ID from search_json
+    def get_fav_song_by_number(self,fromUserName, number):
+        search_results = self.fav_read_search_results(fromUserName)
+        if 1 <= number <= len(search_results):
+            return search_results[number - 1]
+        else:
+            return None
+    #read json favorite user list
+    def fav_read_search_results(self, fromUserName): 
+        file_path = os.path.join(os.getcwd(), 'favorites', f"{ttstr(fromUserName)}.json")
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            # Log that no file was found for the user
+            logging.info(f"No favorites file found for user: {fromUserName}")
+            return []
+        except json.JSONDecodeError:
+            # Log if the file is found but cannot be decoded
+            logging.error(f"Error decoding JSON for file: {file_path}")
+            return []
+        except Exception as e:
+            # General exception handling to catch any other unforeseen errors
+            logging.error(f"An unexpected error occurred while reading the favorites file: {str(e)}")
+            return []
+    
     # Search and play thread
     def youtube_search_and_play_thread(self, query, fromUserID, song_name=None):
         song = self.mpv.youtube_search_and_play(query)
@@ -307,10 +455,10 @@ class TTClient:
             # If playing from search pass the song as argument 
             if song_name is None:
                 song_name = song       
-            self.send_message(f"играет: {song_name}", fromUserID, 1)
+            self.send_message(f"{self.get_message('playing')} {song_name}", fromUserID, 1)
             #self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
         else:
-            self.send_message(f"ничего не найдено", fromUserID, 1)                               
+            self.send_message(f'{self.get_message('search_empty')}', fromUserID, 1)                               
     
     # Define the handling method from other class
     def handle_message(self, message, fromUserID):

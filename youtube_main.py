@@ -317,7 +317,8 @@ class TTClient:
                                 song_number = int(song_number_str)
                                 self.delete_favorite_song(fromUserID, fromUserName, song_number)
                             else:
-                                self.send_message(f'{self.get_message('fav_invalid_song')} f-.', fromUserID, 1)                   
+                                self.send_message(f"{self.get_message('fav_invalid_song')} f-.", fromUserID, 1)
+                  
                         # play song from from favorite list
                         elif msg.lower().startswith("fp"):
                             song_number_str = msg[2:].strip() 
@@ -325,7 +326,7 @@ class TTClient:
                                 song_number = int(song_number_str)
                                 self.play_fav_song_by_number(fromUserID, fromUserName, song_number)
                             else:
-                                self.send_message(f'{self.get_message('fav_invalid_song')} fp.', fromUserID, 1)
+                                self.send_message(f"{self.get_message('fav_invalid_song')} fp.", fromUserID, 1)
                     
                                              
     # user add song to favorite
@@ -347,7 +348,7 @@ class TTClient:
             favorites = []
        
         if len(favorites) >= conf.maxFavItems:
-            self.send_message(f'{self.get_message('fav_limit_error')} {conf.maxFavItems}', fromUserID, 1)
+            self.send_message(f"{self.get_message('fav_limit_error')} {conf.maxFavItems}", fromUserID, 1)
             return
                  
         # Append the new favorite song
@@ -366,7 +367,7 @@ class TTClient:
     #get favorities list 
     def get_fav_songs_list(self, fromUserID, fromUserName):
     
-        filepath = os.path.join('favorites', f'{ttstr(fromUserName)}.json')
+        filepath = os.path.join('favorites', f"{ttstr(fromUserName)}.json")
         # Check if the file exists
         if not os.path.exists(filepath):
             self.send_message(self.get_message('fav_no_list'), fromUserID, 1)
@@ -394,7 +395,7 @@ class TTClient:
     #delete song from favorities
     def delete_favorite_song(self, fromUserID, fromUserName, song_number):
         
-        file_path = os.path.join('favorites', f'{ttstr(fromUserName)}.json')
+        file_path = os.path.join('favorites', f"{ttstr(fromUserName)}.json")
         if os.path.exists(file_path):
             with open(file_path, 'r', encoding='utf-8') as file:
                 favorites = json.load(file)
@@ -458,7 +459,7 @@ class TTClient:
             self.send_message(f"{self.get_message('playing')} {song_name}", fromUserID, 1)
             #self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
         else:
-            self.send_message(f'{self.get_message('search_empty')}', fromUserID, 1)                               
+            self.send_message(f"{self.get_message('search_empty')}", fromUserID, 1)                               
     
     # Define the handling method from other class
     def handle_message(self, message, fromUserID):

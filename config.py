@@ -1,13 +1,13 @@
 class Config:
     #Version
-    version = "1.3"
+    version = "1.5"
     sdk = "SDK 5.15a"
 
     #Server settings
-    host = ""
+    host = "46.36.217.170"
     tcpPort = 10555
     udpPort = 10555
-    botName = ""
+    botName = "@YouTube"
     username = ""
     password = ""
     ChannelName = "/"

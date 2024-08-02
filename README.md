@@ -73,14 +73,15 @@ python youtube_main.py --language ru
     - example of playing 2 times faster: sp2  
 10. [vX] - set the volume
     - example of 50%: v50    
-11. [f+] - add song to favorite list
-12. [fl] - check favorite list
-13. [fpX] - play song by id from favorite list
+11. [?] - check current volume    
+12. [f+] - add song to favorite list
+13. [fl] - check favorite list
+14. [fpX] - play song by id from favorite list
     - example fp10
-14. [f-X] - remove song from favorite list
+15. [f-X] - remove song from favorite list
     - example f-10
-15. [v] - version
-16. [q] - quit the bot     
+16. [v] - version
+17. [q] - quit the bot     
 
 ### Notes:
 

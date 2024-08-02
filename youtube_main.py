@@ -291,6 +291,9 @@ class TTClient:
                                 self.send_message(self.get_message("wrong_volume"), fromUserID, 1)
                         except ValueError:
                             self.send_message((self.get_message("wrong_volume_format")), fromUserID, 1)  
+                    # get volume
+                    elif msg.lower() == "?":
+                        self.send_message(f"vol={self.mpv.get_volume()}", fromUserID, 1) 
                     # Show saved search playlist
                     elif msg.lower() == "pl":
                         self.send_search_results(fromUserID)

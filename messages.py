@@ -7,8 +7,8 @@ messages = {
         "ru": "s: Поиск названия песни.\np: Пауза/воспроизведение.\n+: Следующая песня.\n-: Предыдущая песня.\nvX: Установить громкость.\nspX: Установить скорость от 1 до 4.\npl: Показать последний поиск.\nplX: Воспроизвести песню по ID из последнего поиска.\n+X: Перемотать вперёд.\n-X: Перемотать назад."
     },
     "help1": {
-        "en": "f+: Add to favorites.\nfl: Favorite list.\nfpX: Play by ID from favorites.\nf-X: Remove by ID from favorites.\nv: About.\nq: Exit.",
-        "ru": "f+: Добавить в избранное.\nfl: Список избранного.\nfpX: Воспроизвести по ID из избранного.\nf-X: Удалить по ID из избранного.\nv: О программе.\nq: Выход."
+        "en": "?: Chck the volume\nf+: Add to favorites.\nfl: Favorite list.\nfpX: Play by ID from favorites.\nf-X: Remove by ID from favorites.\nv: About.\nq: Exit.",
+        "ru": "?: Проверить громкость\nf+: Добавить в избранное.\nfl: Список избранного.\nfpX: Воспроизвести по ID из избранного.\nf-X: Удалить по ID из избранного.\nv: О программе.\nq: Выход."
     },
     
      "info": {

@@ -178,6 +178,9 @@ class MPV_Controller:
 
     def set_volume(self, volume):
         self.player.volume = volume
+        
+    def get_volume(self):
+        return self.player.volume
 
     def set_speed(self, speed):
         if 1 <= speed <= 5.0:

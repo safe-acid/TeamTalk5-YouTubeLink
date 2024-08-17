@@ -121,7 +121,7 @@ You will get an otput in your terminal:
 [youtube+oauth2] To give yt-dlp access to your account, go to
 https://www.google.com/device  and enter CODE ALT-SZD-VCD
 ```
-Open URL, enter your CODE and authorize YouTube access your Google Account
+Open URL, enter your CODE and authorize YouTube access to your Google Account
 
 # Notes:
 Telegram - <a href="https://t.me/TT5Link"> TT5Link</a>

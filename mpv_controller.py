@@ -206,6 +206,9 @@ class MPV_Controller:
             'format': 'bestaudio/best',
             'noplaylist': True,
             'ignoreerrors': True,
+            'username': 'oauth2',
+            'password': '',
+            
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

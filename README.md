@@ -54,6 +54,20 @@ The default langauge is English, if you want to run on Russian use command
 ```shell script
 python youtube_main.py --language ru
 ```
+### Initiate OAuth
+When you run the bot first time you need authorize your device where bot is installed.
+Run the bot and perform your first search, send the message
+```shell script
+s metallica
+```
+You will get an otput in your terminal:
+```shell script
+[youtube+oauth2] oauth2: Initializing OAuth2 Authorization Flow
+[youtube+oauth2] To give yt-dlp access to your account, go to
+https://www.google.com/device  and enter CODE ALT-SZD-VCD
+```
+Open URL, enter your CODE and authorize YouTube access your Google Account
+
 ## Commands
 1. [s] - searching and playing the song from YouTube, you could drop youtube links and live links as well
     - example: s Metallica 

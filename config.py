@@ -12,7 +12,7 @@ class Config:
     password = ""
     ChannelName = "/"
     ChannelPassword = ""
-    botName = ""
+    
     
     #Other settings
     #Audio Device ID - INT 

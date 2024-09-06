@@ -6,7 +6,6 @@ from mpv_controller import MPV_Controller
 from collections import defaultdict
 import library
 from library import ttstr
-
 # Add logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

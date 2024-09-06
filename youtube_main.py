@@ -48,7 +48,7 @@ class TTClient:
 
     def onConnectSuccess(self):
         self.connected = True # Connection established
-        self.tt.doLogin(self.nickName, self.userName, self.password, ttstr("ttsamplepy"))
+        self.tt.doLogin(self.nickName, self.userName, self.password, ttstr(conf.botName))
         time.sleep(1)
               
     def onConnectionLost(self):

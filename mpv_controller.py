@@ -206,7 +206,7 @@ class MPV_Controller:
             'format': 'bestaudio/best',
             'noplaylist': True,
             'ignoreerrors': True,
-            'username': 'oauth2',
+            'username': 'oauth+MyProfile',
             'password': '',
             
         }

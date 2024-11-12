@@ -2,4 +2,3 @@ requests
 py7zr
 google-api-python-client
 yt_dlp
-yt-dlp-youtube-oauth2 @ git+https://github.com/coletdjnz/yt-dlp-youtube-oauth2.git

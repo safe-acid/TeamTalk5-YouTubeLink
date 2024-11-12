@@ -1,6 +1,6 @@
 class Config:
     #Version
-    version = "1.6"
+    version = "1.7"
     sdk = "SDK 5.15a"
 
     #Server settings

@@ -46,7 +46,7 @@ class Config:
        https://chromewebstore.google.com/detail/get-cookiestxt-clean/ahmnmhfbokciafffnknlekllgcnafnie?pli=1
     2. Open YouTube and play any video.
     3. In the plugin, select "Export All Cookies."
-    4. Copy all_cookies.txt to the root of the project.(Close brower and do not use it, otherwise cookies )
+    4. Copy all_cookies.txt to the root of the project.
     
     NOTES:
     Close the browser and do not use it; otherwise, the cookies will be refreshed and become invalid.

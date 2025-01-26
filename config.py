@@ -38,7 +38,7 @@ class Config:
     #Login with OAuth is no longer supported
     oAuth = False
     
-    #using the cookies if your server's IP is blocked by google
+    #use the cookies if your server's IP is blocked by google
     cookies = False
     """
     If you want to use cookies, set the value to True.

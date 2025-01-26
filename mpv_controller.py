@@ -202,14 +202,23 @@ class MPV_Controller:
         return re.match(pattern, link) is not None
 
     def download_audio_url(self, url):
+      
         ydl_opts = {
             'format': 'bestaudio/best',
             'noplaylist': True,
             'ignoreerrors': True,
-            'username': 'oauth+MyProfile',
-            'password': '',
             
         }
+        if conf.oAuth:
+            print("Using oAuth")
+            ydl_opts.update({
+                'username': 'oauth+MyProfile',
+                'password': '',
+            })
+        
+        if conf.cookies:
+            print("Using cookies")
+            ydl_opts['cookiefile'] = 'all_cookies.txt'
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)

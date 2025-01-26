@@ -1,18 +1,19 @@
 class Config:
     #Version
-    version = "1.7"
+    version = "2.0"
     sdk = "SDK 5.15a"
 
     #Server settings
     host = "46.36.217.170"
-    tcpPort = 10555
-    udpPort = 10555
+    tcpPort = 10333
+    udpPort = 10333
     botName = "@YouTube"
     username = ""
     password = ""
-    ChannelName = "/"
+    ChannelName = "/IT"
     ChannelPassword = ""
     
+
     
     #Other settings
     #Audio Device ID - INT 
@@ -34,6 +35,22 @@ class Config:
     #Max search result per one request - INT
     max_search_number = 20
     
+    #Login with OAuth is no longer supported
+    oAuth = False
+    
+    #using the cookies if your server's IP is blocked by google
+    cookies = False
+    """
+    If you want to use cookies, set the value to True.
+    1. Download the plugin for Google Chrome: Get cookies.txt. 
+       https://chromewebstore.google.com/detail/get-cookiestxt-clean/ahmnmhfbokciafffnknlekllgcnafnie?pli=1
+    2. Open YouTube and play any video.
+    3. In the plugin, select "Export All Cookies."
+    4. Copy all_cookies.txt to the root of the project.(Close brower and do not use it, otherwise cookies )
+    
+    NOTES:
+    Close the browser and do not use it; otherwise, the cookies will be refreshed and become invalid.
+    """
     
              
 

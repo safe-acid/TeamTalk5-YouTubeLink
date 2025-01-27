@@ -1,6 +1,6 @@
 class Config:
     #Version
-    version = "2.0"
+    version = "2.1"
     sdk = "SDK 5.15a"
 
     #Server settings
@@ -17,7 +17,7 @@ class Config:
     
     #Other settings
     #Audio Device ID - INT 
-    audioInputID = 100
+    audioInputID = 6
     #Audio Device ID - INT   
     max_volume = 75
     #Only admin can operaate this bot - Boolean        
@@ -39,6 +39,7 @@ class Config:
     oAuth = False
     
     #use the cookies if your server's IP is blocked by google
+    
     cookies = False
     """
     If you want to use cookies, set the value to True.

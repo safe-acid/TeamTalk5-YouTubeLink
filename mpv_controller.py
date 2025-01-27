@@ -88,15 +88,31 @@ class MPV_Controller:
             return None
 
     def play_audio(self, url):
+        # self.is_playing = True
+        # self.current_position = 0
+        # print(f"Playing audio: {url}")
+        # self.player.play(url) 
+        # ver 2.1
+        
+        if not url:
+            print("Error: No valid audio URL provided. Skipping playback.")
+            self.is_playing = False
+            return
+
         self.is_playing = True
         self.current_position = 0
         print(f"Playing audio: {url}")
-        self.player.play(url) 
-        # time.sleep(5)
-        # self.player.wait_for_playback()
-        # print("Playback finished")
-        # self.is_playing = False
 
+        try:
+            self.player.play(url)
+        except AttributeError as e:
+            print(f"Error: Invalid audio URL. {e}")
+            self.is_playing = False
+        except Exception as e:
+            print(f"Unexpected error while playing audio: {e}")
+            self.is_playing = False
+
+     
     def check_playback_status(self):
         while True:
             if self.is_playing:
@@ -220,10 +236,27 @@ class MPV_Controller:
             print("Using cookies")
             ydl_opts['cookiefile'] = 'all_cookies.txt'
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            audio_url = info['url']
-            return audio_url
+        # with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        #     info = ydl.extract_info(url, download=False)
+        #     audio_url = info['url']
+        #     return audio_url
+        
+        #ver 2.1
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                if not info or 'url' not in info:
+                    print("Error: No valid audio URL found.")
+                    return None
+                return info['url']
+        except yt_dlp.utils.DownloadError as e:
+            print(f"Error: Failed to download audio. {e}")
+            if conf.cookies:
+                print("Check if the cookie file is valid and properly formatted.")
+            return None
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return None
     
     #fforrmatted time  
     def formatted_time(self, seconds):

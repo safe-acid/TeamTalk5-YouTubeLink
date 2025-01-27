@@ -1,8 +1,6 @@
 ## 📁 Adjust the Service File
 
-Open the youtube_user1.service file.
-Modify the following fields:
-Replace user1 with your username.
+Open the youtube_user1.service file. Modify the following fields, replace user1 with your username.
 
 * Update the WorkingDirectory path to the location of your project:
 ```shell script
@@ -16,7 +14,10 @@ source /home/<your_username>/TeamTalk5-YouTubeLink/.env/bin/activate && python3 
 
 ## 📝 Use a Descriptive Service Name
 
-To easily identify the running service, name it descriptively, e.g., youtube_<username>.service
+To easily identify the running service, name it descriptively, e.g., 
+```shell script
+youtube_<username>.service
+```
 
 ## 📂 Deploy the Service File
 

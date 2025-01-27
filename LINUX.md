@@ -123,6 +123,19 @@ https://www.google.com/device  and enter CODE ALT-SZD-VCD
 ```
 Open URL, enter your CODE and authorize YouTube access to your Google Account
 
+### cookies
+If you want to use cookies, set the value to True.
+* 1. Download the plugin for Google Chrome: Get cookies.txt. 
+       https://chromewebstore.google.com/detail/get-cookiestxt-clean/ahmnmhfbokciafffnknlekllgcnafnie?pli=1
+* 2. Open YouTube and play any video.
+* 3. In the plugin, select "Export All Cookies."
+* 4. Copy all_cookies.txt to the root of the project.
+    
+* NOTES: Close the browser and do not use it; otherwise, the cookies will be refreshed and become invalid.
+
+### Run the bot as servce 
+* Read instructon in systemd/system/README.md
+
 # Notes:
 Telegram - <a href="https://t.me/TT5Link"> TT5Link</a>
 

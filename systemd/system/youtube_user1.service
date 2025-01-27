@@ -1,0 +1,16 @@
+[Unit]
+Description=Run YouTube bot user:user1
+After=network.target pulseaudio.service
+Requires=pulseaudio.service
+
+[Service]
+User=user1
+WorkingDirectory=/home/user1/TeamTalk5-YouTubeLink
+ExecStartPre=/bin/sleep 5
+ExecStart=/bin/bash -c "source /home/user1/TeamTalk5-YouTubeLink/.env/bin/activate && python3 -m youtube_main.py"
+Restart=always
+RestartSec=5
+#StandardOutput=journal
+#StandardError=journal
+[Install]
+WantedBy=multi-user.target

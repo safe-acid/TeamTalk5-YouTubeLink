@@ -109,7 +109,7 @@ nano config.py
 ```shell script
 python3 youtube_main.py
 ```
-### Initiate OAuth
+### Initiate OAuth (NOT SUPPORTED ANYMORE)
 When you run the bot first time you need authorize your device where bot is installed.
 Run the bot and perform your first search, send the message
 ```shell script

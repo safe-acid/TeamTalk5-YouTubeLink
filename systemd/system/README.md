@@ -9,7 +9,7 @@ Open the youtube_user1.service file. Modify the following fields, replace user1 
 * Ensure the ExecStart command correctly activates your virtual environment and runs the bot:
 
 ```shell script
-source /home/<your_username>/TeamTalk5-YouTubeLink/.env/bin/activate && python3 -m youtube_main.py
+source /home/user1/TeamTalk5-YouTubeLink/.env/bin/activate && python3 /home/vnc1/TeamTalk5-YouTubeLink/youtube_main.py
 ```
 
 ## 📝 Use a Descriptive Service Name

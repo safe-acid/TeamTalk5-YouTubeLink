@@ -4,10 +4,19 @@ from googleapiclient.errors import HttpError
 from config import Config as conf
 
 # Set up the YouTube API client
-YOUTUBE_API_KEY = conf.youtubeAPIkey
-youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+try:
+    YOUTUBE_API_KEY = conf.youtubeAPIkey
+    youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+except Exception as e:
+    youtube = None
+    print(f"Error: Failed to initialize YouTube client. Please check your API key. {e}")
+
 
 def search_you_tube(query):
+    if youtube is None:
+        print("YouTube client is not initialized. Please provide a valid API key.")
+        return 
+    
     try:
         # Prepare the request with the specified parameters
         request = youtube.search().list(

@@ -16,7 +16,13 @@ class MPV_Controller:
         self.names = []
         self.songName = ""
         self.playURL = False
-        self.player = mpv_module.MPV(ytdl=True)
+        self.player = mpv_module.MPV(
+            ytdl=True,  
+            cache=True,  
+            cache_secs=30,  # Set minimal caching duration
+            demuxer_max_bytes="50M", 
+            demuxer_max_back_bytes="10M",  
+        )
         self.is_playing = False
         self.player.volume = conf.max_volume
         self.current_position = 0

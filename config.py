@@ -13,7 +13,14 @@ class Config:
     ChannelName = "/IT"
     ChannelPassword = ""
     
-
+    #Personal use // ignore below
+    #ChannelName = "/! Xвосты без дела ✨"
+    #ChannelName = "/!Jazz Cafe🎷"
+    #ChannelName = "/!Small talk📚"
+    #ChannelName = "/!White Panther🤍"
+    #ChannelName = "/!Борщ 🥣"
+    #ChannelName = "/!Дворец принцессы"
+    #ChannelName = "/мур-мяу😍"
     
     #Other settings
     #Audio Device ID - INT 

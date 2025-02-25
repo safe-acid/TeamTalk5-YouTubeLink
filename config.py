@@ -1,26 +1,18 @@
 class Config:
     #Version
-    version = "2.3"
+    version = "2.4"
     sdk = "SDK 5.15a"
 
     #Server settings
-    host = "46.36.217.170"
+    host = "tt5.live"
     tcpPort = 10333
     udpPort = 10333
     botName = "@YouTube"
     username = ""
     password = ""
-    ChannelName = "/IT"
+    ChannelName = ""
     ChannelPassword = ""
     
-    #Personal use // ignore below
-    #ChannelName = "/! Xвосты без дела ✨"
-    #ChannelName = "/!Jazz Cafe🎷"
-    #ChannelName = "/!Small talk📚"
-    #ChannelName = "/!White Panther🤍"
-    #ChannelName = "/!Борщ 🥣"
-    #ChannelName = "/!Дворец принцессы"
-    #ChannelName = "/мур-мяу😍"
     
     #Other settings
     #Audio Device ID - INT 
@@ -60,6 +52,8 @@ class Config:
     Close the browser and do not use it; otherwise, the cookies will be refreshed and become invalid.
     """
     
+    #Show or hide time when playing True/False
+    showTime = True
              
 
 
@@ -81,3 +75,12 @@ class Config:
     # max_search_number = 20
     # favUsers = ["peri", "kot", "sergey"]
     # favLimit = 100
+
+    #Personal use // ignore below
+    #ChannelName = "/! Xвосты без дела ✨"
+    #ChannelName = "/!Jazz Cafe🎷"
+    #ChannelName = "/!Small talk📚"
+    #ChannelName = "/!White Panther🤍"
+    #ChannelName = "/!Борщ 🥣"
+    #ChannelName = "/!Дворец принцессы"
+    #ChannelName = "/мур-мяу😍"

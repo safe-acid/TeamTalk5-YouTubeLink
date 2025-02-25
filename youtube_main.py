@@ -77,7 +77,10 @@ class TTClient:
         self.tt.doChangeNickname(ttstr(nickname))
     #call back function 
     def update_nickname_with_remaining_time(self, remaining_time):
-        new_nickname = f"{ttstr(self.nickName)} {remaining_time}"
+        if conf.showTime:
+            new_nickname = f"{ttstr(self.nickName)} {remaining_time}"
+        else:
+            new_nickname = f"{ttstr(self.nickName)}"
         self.change_nickname(new_nickname)
      #callback function    
     def update_status_with_song_name(self, name):

@@ -77,6 +77,7 @@ class Config:
     # favLimit = 100
 
     #Personal use // ignore below
+    # Стерео 💭
     #ChannelName = "/! Xвосты без дела ✨"
     #ChannelName = "/!Jazz Cafe🎷"
     #ChannelName = "/!Small talk📚"

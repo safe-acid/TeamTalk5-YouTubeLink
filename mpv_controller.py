@@ -27,7 +27,8 @@ class MPV_Controller:
         self.player.volume = conf.max_volume
         self.current_position = 0
         self.playback_thread = threading.Thread(target=self.check_playback_status, daemon=True)
-        self.playback_thread.start()
+        if conf.showTime:
+            self.playback_thread.start()
         self.update_nickname_callback = update_nickname_callback
         self.update_song_name_callback = update_song_name_callback
         #favorite vars init
@@ -75,9 +76,18 @@ class MPV_Controller:
         if self.songs:
             song_name = self.decode_song_name(self.names[self.current_song_index])
             audio_url = self.download_audio_url(self.songs[self.current_song_index])
+       
+            
+            self.is_playing = True
+            
+
             threading.Thread(target=self.play_audio, args=(audio_url,)).start()
             song_list = "\n".join([f"{i+1}. {name}" for i, name in enumerate(self.names)])
             print(song_list)
+            
+            #self.update_nickname_callback(f"{conf.botName} playing")
+            
+            
             self.songName = song_name
             self.update_song_name_callback(self.songName)
             
@@ -108,9 +118,15 @@ class MPV_Controller:
         self.is_playing = True
         self.current_position = 0
         print(f"Playing audio: {url}")
+       
+        #self.update_song_name_callback("stopped")  # ✅ Update status immediately
+        if conf.showTime == False:
+            self.update_nickname_callback(f"{conf.botName} playing")
 
         try:
             self.player.play(url)
+            time.sleep(1)  # Give MPV time to start playback
+           
         except AttributeError as e:
             print(f"Error: Invalid audio URL. {e}")
             self.is_playing = False
@@ -130,7 +146,8 @@ class MPV_Controller:
                     self.update_nickname_callback(self.formatted_time(remaining_time))
                     if remaining_time <= 3:
                         self.play_next_song()
-            time.sleep(2)
+            time.sleep(5)
+    
 
     def play_next_song(self):
         if not self.songs:
@@ -148,7 +165,7 @@ class MPV_Controller:
             self.current_song_name = song_name
             self.current_song_url = self.songs[self.current_song_index]
             self.songName = song_name
-            self.update_song_name_callback(self.songName)
+            self.is_playing = True  # ✅ Update status immediately
             threading.Thread(target=self.play_audio, args=(audio_url,)).start()
             return song_name
 
@@ -173,10 +190,21 @@ class MPV_Controller:
     def stop_playback(self):
         self.player.stop()
         self.is_playing = False
-        self.update_nickname_callback(self.formatted_time(0))
+       
+        if conf.showTime:
+            self.update_nickname_callback(self.formatted_time(0))
+        else:
+            self.update_nickname_callback("Stopped") 
+        
 
     def pause_resume_playback(self):
         self.player.pause = not self.player.pause
+        play_status = "Paused" if self.player.pause else "Playing"
+        
+        if self.current_song_name:
+            self.update_nickname_callback(f"{play_status}")  # ✅ Update nickname
+        else:
+            self.update_nickname_callback(f"{play_status}")  # ✅ Fallback if no song name
 
     def seek_forward(self, seconds, fromUserID, callback):
         try:
@@ -209,16 +237,21 @@ class MPV_Controller:
             self.player.speed = speed
         else:
             print("Invalid speed. Please set a value between 0.1 and 5.0.")
-
+  
+    @property
     def player_status(self):
+        print(f"DEBUG: pause={self.player.pause}, playback_time={self.player.playback_time}, time_pos={self.player.time_pos}")
+
         if self.player.pause:
             return "paused"
-        elif self.player.playback_abort:
-            return "stopped"
-        elif self.player.playback_start:
-            return "playing"
-        return "unknown"
+        
+        if self.is_playing:  
+            return "playing" 
+        
+        return "stopped" if self.player.playback_time is None else "loading"
 
+    
+    
     def is_valid_youtube_link(self, link):
         pattern = r'^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$'
         return re.match(pattern, link) is not None

@@ -5,7 +5,7 @@ from config import Config as conf
 
 # Set up the YouTube API client
 try:
-    YOUTUBE_API_KEY = conf.youtubeAPIkey
+    YOUTUBE_API_KEY = conf.get_api_key()
     youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 except Exception as e:
     youtube = None

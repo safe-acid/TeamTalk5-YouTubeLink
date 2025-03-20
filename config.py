@@ -1,6 +1,6 @@
 class Config:
     #Version
-    version = "2.4"
+    version = "2.5"
     sdk = "SDK 5.15a"
 
     #Server settings
@@ -8,13 +8,21 @@ class Config:
     tcpPort = 10333
     udpPort = 10333
     botName = "@YouTube"
-    username = ""
-    password = ""
-    ChannelName = ""
+    username = "open"
+    password = "open"
+    ChannelName = "/IT"
     ChannelPassword = ""
     
+    #YouTube Api Key instruction in Telegram @
+    API_KEYS = ["AIzaSyAYCcAJmutczWFfhgrJ4oDtmDyai_VdFN8", 
+                "AIzaSyB1tTGMuci_4IKEpNDRsRgJbvckeZUJ9nk", 
+                "AIzaSyBO3cnJLjO84M2yTCE6L7eZdvIXm4_8Vcg",
+                "AIzaSyB8DTGzxTu018H1yoW-xxtiqHevAlR-FR4",
+                "AIzaSyAZqGDaRd4YVxvap4kjPHsZKN1I8sOEAK0",
+                "AIzaSyCS-r_atA6_vPil_JUGoFCdcm2g2NCiQuw"
+                ]
     
-    #Other settings
+
     #Audio Device ID - INT 
     audioInputID = 6
     #Audio Device ID - INT   
@@ -28,17 +36,14 @@ class Config:
     favUsers = []
     #maximum songs in list
     maxFavItems = 100
-    
-    #YouTube Api Key
-    youtubeAPIkey = str("")  
+    #Show or hide time when playing True/False avoid screen jumping
+    showTime = True
     #Max search result per one request - INT
     max_search_number = 20
-    
     #Login with OAuth is no longer supported
     oAuth = False
     
     #use the cookies if your server's IP is blocked by google
-    
     cookies = False
     """
     If you want to use cookies, set the value to True.
@@ -52,29 +57,16 @@ class Config:
     Close the browser and do not use it; otherwise, the cookies will be refreshed and become invalid.
     """
     
-    #Show or hide time when playing True/False
-    showTime = True
-             
+    
+    current_key_index = 0
+    @classmethod
+    def get_api_key(cls):
+        """Return the current API key and rotate to the next one if needed"""
+        key = cls.API_KEYS[cls.current_key_index]
+        cls.current_key_index = (cls.current_key_index + 1) % len(cls.API_KEYS)
+        return key
 
 
-    #Example
-    # host = "46.89.217.170"
-    # tcpPort = 10333
-    # udpPort = 10333
-    # botName = "_radioFM"
-    # username = "open"
-    # password = "open"
-    # ChannelName = "/_Audio bot"
-    # #ChannelPassword = "1112"
-    # ChannelPassword = "private"
-    # audioInputID = 6
-    # max_volume = 50
-    # admin = False 
-    # msgTimeDelay = 5
-    # youtubeAPIkey = str("AIzaSyCU6L_4VxmBRwsEQS8ApKwuWS9090900")
-    # max_search_number = 20
-    # favUsers = ["peri", "kot", "sergey"]
-    # favLimit = 100
 
     #Personal use // ignore below
     # Стерео 💭

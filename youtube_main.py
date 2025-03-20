@@ -27,6 +27,7 @@ class TTClient:
         self.reconnect_delay =  10 # Set reconnect interval to 10 seconds
         self.reconnect_thread = threading.Thread(target=self.reconnect_loop, daemon=True)
         self.reconnect_thread.start()
+       
         self.admin = conf.admin  # Initialize the admin flag
         self.last_message_time = defaultdict(lambda: 0)  # Track last message time for each user
 
@@ -79,9 +80,12 @@ class TTClient:
     def update_nickname_with_remaining_time(self, remaining_time):
         if conf.showTime:
             new_nickname = f"{ttstr(self.nickName)} {remaining_time}"
+            self.change_nickname(new_nickname)
         else:
-            new_nickname = f"{ttstr(self.nickName)}"
-        self.change_nickname(new_nickname)
+            play_status = self.mpv.player_status
+            self.change_nickname(f"{conf.botName} {play_status}")
+        
+        
      #callback function    
     def update_status_with_song_name(self, name):
         self.tt.doChangeStatus(0, ttstr(name) )
@@ -133,10 +137,6 @@ class TTClient:
         else:
             # Handle missing message key
             return "Message not found."
-    
-    def dynamic_nick(self):
-        self.change_nickname(f"{conf.botName}")
-        self.tt.doChangeStatus(0, ttstr(self.get_message("info")))   
     
     # Player status        
     def isPlaying(self):
@@ -233,6 +233,10 @@ class TTClient:
                         self.send_message(f"{ttstr(fromUserName)}{self.get_message('requested')}{search_query}", fromUserID, 2)
                         self.send_message(self.get_message("searching_in_yt"), fromUserID, 1)
                         threading.Thread(target=self.youtube_search_and_play_thread, args=(search_query, fromUserID)).start()
+                        # time.sleep(5)
+                        # play_status = self.mpv.player_status
+                        # self.change_nickname(f"{conf.botName} {play_status}")
+                        
                     # Next song
                     elif msg == "+":
                         self.send_message(self.get_message("next_song"), fromUserID, 1)
@@ -265,6 +269,8 @@ class TTClient:
                     # Pause/play
                     elif msg.lower() == "p":
                         self.mpv.pause_resume_playback()
+                        play_status = self.mpv.player_status
+                        self.change_nickname(f"{conf.botName} {play_status}")
                     # Quit
                     elif msg.lower() == "q":
                         self.disable_voice_transmission()

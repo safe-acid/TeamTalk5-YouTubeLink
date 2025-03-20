@@ -8,18 +8,18 @@ class Config:
     tcpPort = 10333
     udpPort = 10333
     botName = "@YouTube"
-    username = "open"
-    password = "open"
+    username = ""
+    password = ""
     ChannelName = "/IT"
     ChannelPassword = ""
     
     #YouTube Api Key instruction in Telegram @
-    API_KEYS = ["AIzaSyAYCcAJmutczWFfhgrJ4oDtmDyai_VdFN8", 
-                "AIzaSyB1tTGMuci_4IKEpNDRsRgJbvckeZUJ9nk", 
-                "AIzaSyBO3cnJLjO84M2yTCE6L7eZdvIXm4_8Vcg",
-                "AIzaSyB8DTGzxTu018H1yoW-xxtiqHevAlR-FR4",
-                "AIzaSyAZqGDaRd4YVxvap4kjPHsZKN1I8sOEAK0",
-                "AIzaSyCS-r_atA6_vPil_JUGoFCdcm2g2NCiQuw"
+    API_KEYS = ["APIKEY_1", 
+                "APIKEY_2", 
+                "APIKEY_3",
+                "APIKEY_4",
+                "APIKEY_5",
+                "APIKEY_6"
                 ]
     
 

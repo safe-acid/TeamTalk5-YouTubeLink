@@ -1,0 +1,11 @@
+[Unit]
+Description=PulseAudio system-wide service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/pulseaudio --system --disallow-exit --disable-shm --daemonize=no
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -9,3 +9,11 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target
+
+
+sudo apt update && sudo apt upgrade -y
+sudo apt install build-essential dkms linux-headers-$(uname -r)
+sudo mount /dev/cdrom /mnt
+sudo sh /mnt/VBoxLinuxAdditions.run
+sudo reboot
+lsmod | grep vbox

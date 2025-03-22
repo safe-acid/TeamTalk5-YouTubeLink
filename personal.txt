@@ -17,3 +17,16 @@ sudo mount /dev/cdrom /mnt
 sudo sh /mnt/VBoxLinuxAdditions.run
 sudo reboot
 lsmod | grep vbox
+
+
+self.player = mpv_module.MPV(
+    ytdl=True,
+    cache=True,
+    cache_secs=60,  # Increase buffer duration
+    demuxer_max_bytes="100M",
+    demuxer_max_back_bytes="50M",
+    hwdec="auto",  # Enable hardware decoding
+    vd_lavc_threads="4",  # Multithreaded video decoding
+    audio_buffer="2048",  # Larger audio buffer
+    autosync="30",  # Audio/video sync improvement
+)

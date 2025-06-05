@@ -1,0 +1,6 @@
+[Unit]
+Description=Clear Linux RAM Cache
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash -c "sync; echo 3 > /proc/sys/vm/drop_caches"

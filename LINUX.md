@@ -165,11 +165,11 @@ Unit=clear-cache.service
 WantedBy=timers.target
 
 ```
-
+### Run it
+```shell script
 sudo systemctl daemon-reload
-
 sudo systemctl enable --now clear-cache.timer
-
+```
 
 ### Keep updated your packages
 ```shell script

@@ -170,6 +170,14 @@ sudo systemctl daemon-reload
 
 sudo systemctl enable --now clear-cache.timer
 
+
+### Keep updated your packages
+```shell script
+source .env/bin/activate
+pip install --upgrade -r requirements.txt
+
+```
+
 # 📬 Notes:
 Telegram - <a href="https://t.me/TT5Link"> TT5Link</a>
 

@@ -1,26 +1,24 @@
 class Config:
     #Version
-    version = "2.5"
-    sdk = "SDK 5.15a"
+    version = "3.0"
+    sdk = "SDK 5.19a"
 
     #Server settings
     host = "tt5.live"
     tcpPort = 10333
     udpPort = 10333
-    botName = "@YouTube"
+    botName = "@YouTube_Docker"
     username = ""
     password = ""
-    ChannelName = "/IT"
+    ChannelName = "/"
     ChannelPassword = ""
     
-    #YouTube Api Key instruction in Telegram @
-    API_KEYS = ["APIKEY_1", 
-                "APIKEY_2", 
-                "APIKEY_3",
-                "APIKEY_4",
-                "APIKEY_5",
-                "APIKEY_6"
-                ]
+    '''
+    Update your Audio ID and server's settings in config.py file and API Key. API key could be created for free in Google Cloud Console (https://console.cloud.google.com/) Menu -> APIs & Servces -> Creditants
+    Check if YouTube Data API v3 is enabled, go to:
+    Menu -> APIs & Servces -> Enabled APIs & Services and search for YouTube Data API v3
+    '''
+    API_KEYS = ["",""]
     
 
     #Audio Device ID - INT 
@@ -72,8 +70,6 @@ class Config:
     # Стерео 💭
     #ChannelName = "/! Xвосты без дела ✨"
     #ChannelName = "/!Jazz Cafe🎷"
-    #ChannelName = "/!Small talk📚"
     #ChannelName = "/!White Panther🤍"
     #ChannelName = "/!Борщ 🥣"
-    #ChannelName = "/!Дворец принцессы"
     #ChannelName = "/мур-мяу😍"

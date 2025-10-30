@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  tt5-youtubelink:
+    build: .
+    container_name: tt5-youtubelink
+    environment:
+      - AUDIO_SINK_NAME=Source
+      - AUDIO_SOURCE_NAME=VirtualMic
+      - AUDIO_MASTER=Source.monitor
+      - TT_SDK_VER=v5.19a
+    tmpfs:
+      - /opt/app/runtime:uid=1000,gid=1000,mode=700
+    tty: true
+    stdin_open: true
+    restart: unless-stopped

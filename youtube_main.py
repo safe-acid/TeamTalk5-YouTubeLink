@@ -9,6 +9,7 @@ from library import ttstr
 # Add logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+current_language = "en"
 
 class TTClient:
     def __init__(self, host, tcpPort, udpPort, nickName, userName, password):
@@ -24,12 +25,16 @@ class TTClient:
         self.tt.onCmdMyselfLoggedIn = self.onCmdMyselfLoggedIn
         self.tt.onCmdUserTextMessage = self.onCmdUserTextMessage
         self.connected = False   # Flag to track connection status
+        self.connecting = False
+        self.connection_lock = threading.Lock()
         self.reconnect_delay =  10 # Set reconnect interval to 10 seconds
-        self.reconnect_thread = threading.Thread(target=self.reconnect_loop, daemon=True)
-        self.reconnect_thread.start()
+        self.reconnect_thread = None
        
         self.admin = conf.admin  # Initialize the admin flag
         self.last_message_time = defaultdict(lambda: 0)  # Track last message time for each user
+        self.last_nickname = None
+        self.last_nickname_change = 0
+        self.nickname_min_interval = 2.8
 
         # Instance of MPV_Controller with the callback
         self.mpv = MPV_Controller(self.update_nickname_with_remaining_time, self.update_status_with_song_name)
@@ -41,25 +46,51 @@ class TTClient:
         self.tt.enableVoiceTransmission(False)
     
     def start(self):
+        if self.reconnect_thread is None:
+            self.reconnect_thread = threading.Thread(target=self.reconnect_loop, daemon=True)
+            self.reconnect_thread.start()
         self.connect()
                    
     def connect(self):
-        self.tt.connect(self.host, self.tcpPort, self.udpPort)
+        with self.connection_lock:
+            if self.connected or self.connecting:
+                return
+            self.connecting = True
+        try:
+            self.tt.connect(self.host, self.tcpPort, self.udpPort)
+        except Exception:
+            logger.exception("Failed to connect.")
+            raise
+        finally:
+            with self.connection_lock:
+                self.connecting = False
 
     def onConnectSuccess(self):
-        self.connected = True # Connection established
+        with self.connection_lock:
+            self.connected = True # Connection established
+            self.connecting = False
         self.tt.doLogin(self.nickName, self.userName, self.password, ttstr(conf.botName))
         time.sleep(1)
               
     def onConnectionLost(self):
+        with self.connection_lock:
+            self.connected = False
+            self.connecting = False
         self.mpv.stop_playback()
         self.tt.doChangeStatus(0, ttstr(self.get_message("info")))  
-        self.connect()
-        self.connected = False
         logger.info("Connection lost.")
         
     def set_input_device(self, id: int) -> None:
         self.tt.initSoundInputDevice(id)  
+
+    def start_worker(self, target, *args):
+        threading.Thread(target=target, args=args, daemon=True).start()
+
+    def safe_user_file(self, fromUserName):
+        raw_name = ttstr(fromUserName).strip() or str(fromUserName)
+        safe_name = "".join(ch if ch.isalnum() or ch in (" ", "-", "_") else "_" for ch in raw_name)
+        safe_name = safe_name.strip(" .") or "user"
+        return f"{safe_name[:80]}.json"
     
     def onCmdMyselfLoggedIn(self, userID, userAccount):
         print(f"Hello {userAccount.szUsername}. Your User ID is {userID}")
@@ -75,11 +106,36 @@ class TTClient:
          print(f"Channel message in channelid {ttstr(channelID)} from userid {ttstr(fromUserID)} username: {ttstr(fromUserName)} {ttstr(msgText)}")
 
     def change_nickname(self, nickname):
-        self.tt.doChangeNickname(ttstr(nickname))
+        now = time.time()
+        if isinstance(nickname, bytes):
+            nickname = nickname.decode("utf-8", errors="ignore")
+        else:
+            nickname = str(nickname)
+        if nickname == self.last_nickname:
+            return
+        if now - self.last_nickname_change < self.nickname_min_interval:
+            return
+        fallback_nickname = nickname
+        for icon in ("♪", "♫", "♬", "♩", "▶", "▷", "◐", "◓", "◑", "◒", ">", ">>", ">>>"):
+            fallback_nickname = fallback_nickname.replace(icon, "")
+        fallback_nickname = " ".join(fallback_nickname.split())
+        try:
+            self.tt.doChangeNickname(ttstr(nickname))
+            self.last_nickname = nickname
+            self.last_nickname_change = now
+        except Exception:
+            logger.exception("Failed to change nickname.")
+            if fallback_nickname != nickname:
+                try:
+                    self.tt.doChangeNickname(ttstr(fallback_nickname))
+                    self.last_nickname = fallback_nickname
+                    self.last_nickname_change = now
+                except Exception:
+                    logger.exception("Failed to change fallback nickname.")
     #call back function 
     def update_nickname_with_remaining_time(self, remaining_time):
         if conf.showTime:
-            new_nickname = f"{ttstr(self.nickName)} {remaining_time}"
+            new_nickname = f"{conf.botName} {remaining_time}"
             self.change_nickname(new_nickname)
         else:
             play_status = self.mpv.player_status
@@ -88,7 +144,7 @@ class TTClient:
         
      #callback function    
     def update_status_with_song_name(self, name):
-        self.tt.doChangeStatus(0, ttstr(name) )
+        self.tt.doChangeStatus(0, ttstr(name))
         
 
     def onCmdUserTextMessage(self, message):
@@ -140,25 +196,22 @@ class TTClient:
     
     # Player status        
     def isPlaying(self):
-        if self.mpv.player_status == "playing":
-            return True
+        return self.mpv.player_status == "playing"
 
     # Player status        
     def isPaused(self):
-        if self.mpv.player_status == "paused":
-            return True
+        return self.mpv.player_status == "paused"
 
     # Player status        
     def isStop(self):
-        if self.mpv.player_status == "stopped":
-            return True
+        return self.mpv.player_status == "stopped"
     
     def send_message(self, text: str, user: Optional[library.User] = None, type: int = 1) -> None:
         message = library.TeamTalk5.TextMessage()
         message.nFromUserID = self.tt.getMyUserID()
         message.nMsgType = type
         message.szMessage = ttstr(text)
-       
+
         if type == 1:
             if isinstance(user, int):
                 message.nToUserID = user
@@ -174,6 +227,9 @@ class TTClient:
             with open('search_list.json', 'r') as f:
                 return json.load(f)
         except FileNotFoundError:
+            return []
+        except json.JSONDecodeError:
+            logger.warning("search_list.json is not valid JSON.")
             return []
 
     # Prepare list to user check the list - command pl
@@ -196,13 +252,11 @@ class TTClient:
 
     # Play song by ID
     def play_song_by_number(self, fromUserID, number):
-        song = self.get_song_by_number(number)
-        if song:
-            song_name = song['name']
-            song_url = song['url']
-            threading.Thread(target=self.youtube_search_and_play_thread, args=(song_url, fromUserID, song_name)).start()
+        search_results = self.read_search_results()
+        if 1 <= number <= len(search_results):
+            self.start_worker(self.play_saved_playlist_thread, search_results, number - 1, fromUserID)
         else:
-            self.send_message("Invalid song number. Please try again.", fromUserID, 1)        
+            self.send_message("Invalid song number. Please try again.", fromUserID, 1)
     
     def onUserMessage(self, fromUserID, fromUserName, msg):
         anonymous = self.anonymous(fromUserName)
@@ -229,10 +283,9 @@ class TTClient:
                     # Search and play   
                     elif msg.lower().startswith("s ") and len(msg.lower()) > 4:
                         search_query  = msg[2:].strip()
-                        self.mpv.stop_playback()
                         self.send_message(f"{ttstr(fromUserName)}{self.get_message('requested')}{search_query}", fromUserID, 2)
                         self.send_message(self.get_message("searching_in_yt"), fromUserID, 1)
-                        threading.Thread(target=self.youtube_search_and_play_thread, args=(search_query, fromUserID)).start()
+                        self.start_worker(self.youtube_search_and_play_thread, search_query, fromUserID)
                         # time.sleep(5)
                         # play_status = self.mpv.player_status
                         # self.change_nickname(f"{conf.botName} {play_status}")
@@ -241,8 +294,11 @@ class TTClient:
                     elif msg == "+":
                         self.send_message(self.get_message("next_song"), fromUserID, 1)
                         song_name = self.mpv.play_next_song()
-                        if song_name:                   
-                            self.send_message(f"{self.get_message('playing')} {song_name}", fromUserID, 1)
+                        if song_name:
+                            if song_name.startswith("No more songs"):
+                                self.send_message(song_name, fromUserID, 1)
+                            else:
+                                self.send_message(f"{self.get_message('playing')} {song_name}", fromUserID, 1)
                             # self.tt.doChangeStatus(0, ttstr(f"{song_name}"))
                     # Previous song
                     elif msg == "-":
@@ -253,17 +309,23 @@ class TTClient:
                             self.send_message(f"{self.get_message('playing')} {song_name}", fromUserID, 1)
                             #self.tt.doChangeStatus(0, ttstr(f"{song_name}"))
                     # Rewind forward
-                    elif msg.startswith("+") and len(msg) > 1 and self.isPlaying:
+                    elif msg.startswith("+") and len(msg) > 1:
                         try:
                             seconds = int(msg[1:])
-                            self.mpv.seek_forward(seconds, fromUserID, self.handle_message)
+                            if self.isPlaying():
+                                self.mpv.seek_forward(seconds, fromUserID, self.handle_message)
+                            else:
+                                self.send_message(self.get_message("search_empty"), fromUserID, 1)
                         except ValueError:
                             self.send_message(self.get_message("wrong_search_format"), fromUserID, 1)
                     # Rewind backward
-                    elif msg.startswith("-") and len(msg) > 1 and self.isPlaying:
+                    elif msg.startswith("-") and len(msg) > 1:
                         try:
                             seconds = int(msg[1:])
-                            self.mpv.seek_backward(seconds, fromUserID, self.handle_message)
+                            if self.isPlaying():
+                                self.mpv.seek_backward(seconds, fromUserID, self.handle_message)
+                            else:
+                                self.send_message(self.get_message("search_empty"), fromUserID, 1)
                         except ValueError:
                             self.send_message(self.get_message("wrong_search_format"), fromUserID, 1)
                     # Pause/play
@@ -307,8 +369,11 @@ class TTClient:
                         self.send_search_results(fromUserID)
                     # Play from last searched playlist
                     elif msg.lower().startswith("pl") and len(msg) > 2:
-                        song_number = int(msg[2:])  # Extract digits after "pl"
-                        self.play_song_by_number(fromUserID, song_number)  
+                        song_number_str = msg[2:].strip()
+                        if song_number_str.isdigit():
+                            self.play_song_by_number(fromUserID, int(song_number_str))
+                        else:
+                            self.send_message(self.get_message("fav_inval_err"), fromUserID, 1)
                     
                     #check i admin allows user fav list for all users or selectged
                     if not conf.favUsers or ttstr(fromUserName) in conf.favUsers:       
@@ -317,7 +382,10 @@ class TTClient:
                         if msg.lower() == "f+":
                             current_song_name = self.mpv.current_song_name  # You need to implement this attribute in your MPV_Controller
                             current_song_url = self.mpv.current_song_url  # Likewise, this needs to be implemented
-                            self.add_to_favorites(fromUserID, fromUserName, current_song_name, current_song_url)
+                            if current_song_name and current_song_url:
+                                self.add_to_favorites(fromUserID, fromUserName, current_song_name, current_song_url)
+                            else:
+                                self.send_message(self.get_message("search_empty"), fromUserID, 1)
                         # get fav list
                         elif msg.lower() == "fl":
                             self.get_fav_songs_list(fromUserID,fromUserName)
@@ -347,13 +415,17 @@ class TTClient:
         os.makedirs(favorites_dir, exist_ok=True)
 
         # Define the file path
-        file_path = os.path.join(favorites_dir, f"{ttstr(fromUserName)}.json")
+        file_path = os.path.join(favorites_dir, self.safe_user_file(fromUserName))
 
         # Check if the file exists
         if os.path.exists(file_path):
             # Read the existing data
-            with open(file_path, 'r', encoding='utf-8') as file:
-                favorites = json.load(file)
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    favorites = json.load(file)
+            except json.JSONDecodeError:
+                self.send_message(self.get_message('fav_format_err'), fromUserID, 1)
+                return
         else:
             # Initialize an empty list if the file does not exist
             favorites = []
@@ -378,7 +450,7 @@ class TTClient:
     #get favorities list 
     def get_fav_songs_list(self, fromUserID, fromUserName):
     
-        filepath = os.path.join('favorites', f"{ttstr(fromUserName)}.json")
+        filepath = os.path.join('favorites', self.safe_user_file(fromUserName))
         # Check if the file exists
         if not os.path.exists(filepath):
             self.send_message(self.get_message('fav_no_list'), fromUserID, 1)
@@ -406,10 +478,14 @@ class TTClient:
     #delete song from favorities
     def delete_favorite_song(self, fromUserID, fromUserName, song_number):
         
-        file_path = os.path.join('favorites', f"{ttstr(fromUserName)}.json")
+        file_path = os.path.join('favorites', self.safe_user_file(fromUserName))
         if os.path.exists(file_path):
-            with open(file_path, 'r', encoding='utf-8') as file:
-                favorites = json.load(file)
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    favorites = json.load(file)
+            except json.JSONDecodeError:
+                self.send_message(self.get_message('fav_format_err'), fromUserID, 1)
+                return None
             if 1 <= song_number <= len(favorites):
                 removed_song = favorites.pop(song_number - 1)  # Adjust for zero-based index
                 with open(file_path, 'w', encoding='utf-8') as file:
@@ -423,12 +499,9 @@ class TTClient:
 
     # Play favorite sng song by ID
     def play_fav_song_by_number(self, fromUserID, fromUserName, number):
-        song = self.get_fav_song_by_number(fromUserName, number)
-    
-        if song:
-            song_name = song['name']
-            song_url = song['url']
-            threading.Thread(target=self.youtube_search_and_play_thread, args=(song_url, fromUserID, song_name)).start()
+        favorites = self.fav_read_search_results(fromUserName)
+        if 1 <= number <= len(favorites):
+            self.start_worker(self.play_saved_playlist_thread, favorites, number - 1, fromUserID)
         else:
             self.send_message(self.get_message('fav_inval_err'), fromUserID, 1) 
     
@@ -441,7 +514,7 @@ class TTClient:
             return None
     #read json favorite user list
     def fav_read_search_results(self, fromUserName): 
-        file_path = os.path.join(os.getcwd(), 'favorites', f"{ttstr(fromUserName)}.json")
+        file_path = os.path.join(os.getcwd(), 'favorites', self.safe_user_file(fromUserName))
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
@@ -460,7 +533,7 @@ class TTClient:
     
     # Search and play thread
     def youtube_search_and_play_thread(self, query, fromUserID, song_name=None):
-        song = self.mpv.youtube_search_and_play(query)
+        song = self.mpv.youtube_search_and_play(query, song_name)
         if song:
             self.enable_voice_transmission()
             # If user playing from saved search_list argument song_name is passed
@@ -471,6 +544,14 @@ class TTClient:
             #self.tt.doChangeStatus(0, ttstr(f"играет: {song_name}"))
         else:
             self.send_message(f"{self.get_message('search_empty')}", fromUserID, 1)                               
+
+    def play_saved_playlist_thread(self, playlist, start_index, fromUserID):
+        song_name = self.mpv.play_saved_playlist(playlist, start_index)
+        if song_name:
+            self.enable_voice_transmission()
+            self.send_message(f"{self.get_message('playing')} {song_name}", fromUserID, 1)
+        else:
+            self.send_message(f"{self.get_message('search_empty')}", fromUserID, 1)
     
     # Define the handling method from other class
     def handle_message(self, message, fromUserID):
@@ -481,10 +562,16 @@ class TTClient:
         while True:   
             if not self.connected:
                 logger.info("Attempting to reconnect...")
-                self.tt.disconnect()
+                try:
+                    self.tt.disconnect()
+                except Exception:
+                    logger.debug("Disconnect before reconnect failed.", exc_info=True)
                 time.sleep(2)
                 # Attempt to reconnect
-                self.connect()
+                try:
+                    self.connect()
+                except Exception:
+                    logger.exception("Reconnect attempt failed.")
             time.sleep(self.reconnect_delay)    
 
 if __name__ == "__main__":

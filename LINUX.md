@@ -109,19 +109,8 @@ nano config.py
 ```shell script
 python3 youtube_main.py
 ```
-### 🌐 Initiate OAuth (NOT SUPPORTED ANYMORE)
-When you run the bot first time you need authorize your device where bot is installed.
-Run the bot and perform your first search, send the message
-```shell script
-s metallica
-```
-You will get an otput in your terminal:
-```shell script
-[youtube+oauth2] oauth2: Initializing OAuth2 Authorization Flow
-[youtube+oauth2] To give yt-dlp access to your account, go to
-https://www.google.com/device  and enter CODE ALT-SZD-VCD
-```
-Open URL, enter your CODE and authorize YouTube access to your Google Account
+### 🌐 OAuth
+OAuth login is no longer supported. Use a YouTube Data API v3 key for search, and cookies only when your server IP is blocked by YouTube.
 
 ### 🍪 Use Cookies (optional)
 If you want to use cookies, set the value to True.

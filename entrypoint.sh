@@ -40,5 +40,4 @@ echo "[audio] sources:"; pactl list short sources || true
 
 # 5) Start the bot
 cd /opt/app/src
-pip install -r /opt/app/src/requirements.txt
 exec python youtube_main.py

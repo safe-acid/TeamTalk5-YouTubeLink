@@ -116,7 +116,7 @@ class TTClient:
         if now - self.last_nickname_change < self.nickname_min_interval:
             return
         fallback_nickname = nickname
-        for icon in ("♪", "♫", "♬", "♩", "▶", "▷", "◐", "◓", "◑", "◒", ">", ">>", ">>>"):
+        for icon in ("▶️", "⏸️", "⏹️", "♪", "♫", "♬", "♩", "▶", "▷", "◐", "◓", "◑", "◒", ">", ">>", ">>>"):
             fallback_nickname = fallback_nickname.replace(icon, "")
         fallback_nickname = " ".join(fallback_nickname.split())
         try:
@@ -132,14 +132,33 @@ class TTClient:
                     self.last_nickname_change = now
                 except Exception:
                     logger.exception("Failed to change fallback nickname.")
+
+    def base_bot_name(self):
+        name = str(conf.botName)
+        for icon in ("▶️", "⏸️", "⏹️", "▶"):
+            name = name.replace(icon, "")
+        for word in ("playing", "paused", "stopped", "Playing", "Paused", "Stopped"):
+            name = name.replace(word, "")
+        return " ".join(name.split()) or "@YouTube"
+
     #call back function 
     def update_nickname_with_remaining_time(self, remaining_time):
-        if conf.showTime:
-            new_nickname = f"{conf.botName} {remaining_time}"
-            self.change_nickname(new_nickname)
+        state = str(remaining_time).lower()
+        base_name = self.base_bot_name()
+        if state in ("paused", "pause"):
+            if self.mpv.current_remaining_label:
+                self.change_nickname(f"{base_name} ⏸️ {self.mpv.current_remaining_label}")
+            else:
+                self.change_nickname(f"{base_name} ⏸️")
+        elif state in ("stopped", "stop"):
+            self.change_nickname(f"{base_name} ⏹️")
+        elif state in ("playing", "play"):
+            self.change_nickname(f"{base_name} ▶️")
+        elif conf.showTime:
+            self.change_nickname(f"{base_name} ▶️ {remaining_time}")
         else:
             play_status = self.mpv.player_status
-            self.change_nickname(f"{conf.botName} {play_status}")
+            self.change_nickname(f"{base_name} {play_status}")
         
         
      #callback function    
@@ -332,7 +351,7 @@ class TTClient:
                     elif msg.lower() == "p":
                         self.mpv.pause_resume_playback()
                         play_status = self.mpv.player_status
-                        self.change_nickname(f"{conf.botName} {play_status}")
+                        self.update_nickname_with_remaining_time(play_status)
                     # Quit
                     elif msg.lower() == "q":
                         self.disable_voice_transmission()

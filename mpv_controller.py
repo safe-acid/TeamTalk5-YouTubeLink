@@ -36,6 +36,7 @@ class MPV_Controller:
         self.is_playing = False
         self.player.volume = conf.max_volume
         self.current_position = 0
+        self.current_remaining_label = None
         self.playback_icons = self.playback_icon_sets[0]
         self.playback_icon_index = 0
         self.lock = threading.RLock()
@@ -69,6 +70,7 @@ class MPV_Controller:
         icon = self.playback_icons[self.playback_icon_index % len(self.playback_icons)]
         self.playback_icon_index += 1
         time_label = self.formatted_time(remaining_time) if remaining_time is not None else "--:--"
+        self.current_remaining_label = time_label
         return f"{time_label} {icon}"
 
     def extract_video_id(self, url):
@@ -222,7 +224,7 @@ class MPV_Controller:
         if conf.showTime:
             self.update_nickname_callback(self.playback_time_label())
         else:
-            self.update_nickname_callback(f"{conf.botName} playing")
+            self.update_nickname_callback("playing")
 
         try:
             with self.lock:
@@ -277,10 +279,11 @@ class MPV_Controller:
                 except Exception as e:
                     print(f"Error stopping at end of playlist: {e}")
                 self.update_song_name_callback("stopped")
-                self.update_nickname_callback(self.formatted_time(0))
+                self.update_nickname_callback("stopped")
                 self.current_song_index = 0
                 self.current_song_name = None
                 self.current_song_url = None
+                self.current_remaining_label = None
                 self.songName = ""
                 print("No more songs in the playlist.")
                 return "No more songs in the playlist."
@@ -333,12 +336,13 @@ class MPV_Controller:
             self.is_playing = False
             self.current_song_name = None
             self.current_song_url = None
+            self.current_remaining_label = None
             self.songName = ""
        
         if conf.showTime:
-            self.update_nickname_callback(self.formatted_time(0))
+            self.update_nickname_callback("stopped")
         else:
-            self.update_nickname_callback("Stopped") 
+            self.update_nickname_callback("stopped") 
         self.update_song_name_callback("stopped")
         
 
@@ -351,7 +355,7 @@ class MPV_Controller:
             elif self.current_song_name:
                 self.is_playing = True
         
-        self.update_nickname_callback(f"{play_status}")
+        self.update_nickname_callback(play_status.lower())
 
     def seek_forward(self, seconds, fromUserID, callback):
         try:

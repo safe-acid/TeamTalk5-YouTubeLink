@@ -7,7 +7,7 @@ class Config:
     host = "tt5.live"
     tcpPort = 10333
     udpPort = 10333
-    botName = "@YouTube ▶️"
+    botName = "@YouTube"
     username = ""
     password = ""
     ChannelName = "/"

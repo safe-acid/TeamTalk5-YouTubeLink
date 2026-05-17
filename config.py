@@ -1,13 +1,13 @@
 class Config:
     #Version
-    version = "3.2"
+    version = "3.3"
     sdk = "SDK 5.19a"
 
     #Server settings
     host = "tt5.live"
     tcpPort = 10333
     udpPort = 10333
-    botName = "@YouTube 🐳"
+    botName = "@YouTube ▶️"
     username = ""
     password = ""
     ChannelName = "/"

@@ -228,6 +228,7 @@ class MPV_Controller:
 
         try:
             with self.lock:
+                self.player.pause = False
                 self.player.play(url)
             time.sleep(1)  # Give MPV time to start playback
            

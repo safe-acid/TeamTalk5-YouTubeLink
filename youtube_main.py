@@ -105,7 +105,7 @@ class TTClient:
     def onChannelMessage(self, fromUserID, fromUserName, channelID, msgText):
          print(f"Channel message in channelid {ttstr(channelID)} from userid {ttstr(fromUserID)} username: {ttstr(fromUserName)} {ttstr(msgText)}")
 
-    def change_nickname(self, nickname):
+    def change_nickname(self, nickname, force=False):
         now = time.time()
         if isinstance(nickname, bytes):
             nickname = nickname.decode("utf-8", errors="ignore")
@@ -113,7 +113,7 @@ class TTClient:
             nickname = str(nickname)
         if nickname == self.last_nickname:
             return
-        if now - self.last_nickname_change < self.nickname_min_interval:
+        if not force and now - self.last_nickname_change < self.nickname_min_interval:
             return
         fallback_nickname = nickname
         for icon in ("▶️", "⏸️", "⏹️", "♪", "♫", "♬", "♩", "▶", "▷", "◐", "◓", "◑", "◒", ">", ">>", ">>>"):
@@ -147,13 +147,13 @@ class TTClient:
         base_name = self.base_bot_name()
         if state in ("paused", "pause"):
             if self.mpv.current_remaining_label:
-                self.change_nickname(f"{base_name} ⏸️ {self.mpv.current_remaining_label}")
+                self.change_nickname(f"{base_name} ⏸️ {self.mpv.current_remaining_label}", force=True)
             else:
-                self.change_nickname(f"{base_name} ⏸️")
+                self.change_nickname(f"{base_name} ⏸️", force=True)
         elif state in ("stopped", "stop"):
-            self.change_nickname(f"{base_name} ⏹️")
+            self.change_nickname(f"{base_name} ⏹️", force=True)
         elif state in ("playing", "play"):
-            self.change_nickname(f"{base_name} ▶️")
+            self.change_nickname(f"{base_name} ▶️", force=True)
         elif conf.showTime:
             self.change_nickname(f"{base_name} ▶️ {remaining_time}")
         else:

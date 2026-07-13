@@ -7,6 +7,7 @@ import threading
 import re
 import json
 import os
+import subprocess
 from config import Config as conf
 import time
 import random
@@ -48,6 +49,7 @@ class MPV_Controller:
         #favorite vars init
         self.current_song_name = None
         self.current_song_url = None
+        self.current_audio_url = None
 
     def decode_song_name(self, string):
         decoded = html.unescape(string)
@@ -104,6 +106,7 @@ class MPV_Controller:
             self.current_song_index = 0
             self.current_song_name = None
             self.current_song_url = None
+            self.current_audio_url = None
 
     def youtube_search_and_play(self, query, display_name=None):
         with self.lock:
@@ -157,6 +160,7 @@ class MPV_Controller:
                 self.songName = song_name
                 self.current_song_name = song_name
                 self.current_song_url = songs[0]
+                self.current_audio_url = audio_url
                 self.select_random_icon_set()
             self.update_song_name_callback(self.song_status_label(0, song_name))
             
@@ -196,6 +200,7 @@ class MPV_Controller:
             self.current_song_index = start_index
             self.current_song_name = song_name
             self.current_song_url = songs[start_index]
+            self.current_audio_url = audio_url
             self.songName = song_name
             self.select_random_icon_set()
 
@@ -285,6 +290,7 @@ class MPV_Controller:
                 self.current_song_index = 0
                 self.current_song_name = None
                 self.current_song_url = None
+                self.current_audio_url = None
                 self.current_remaining_label = None
                 self.songName = ""
                 print("No more songs in the playlist.")
@@ -294,6 +300,7 @@ class MPV_Controller:
             song_url = self.songs[self.current_song_index]
             self.current_song_name = song_name
             self.current_song_url = song_url
+            self.current_audio_url = None
             self.songName = song_name
             self.select_random_icon_set()
             self.is_playing = True
@@ -303,6 +310,8 @@ class MPV_Controller:
             with self.lock:
                 self.is_playing = False
             return None
+        with self.lock:
+            self.current_audio_url = audio_url
         print(song_name)
         self.update_song_name_callback(self.song_status_label(None, song_name))
         threading.Thread(target=self.play_audio, args=(audio_url,), daemon=True).start()
@@ -318,6 +327,7 @@ class MPV_Controller:
             song_url = self.songs[self.current_song_index]
             self.current_song_name = song_name
             self.current_song_url = song_url
+            self.current_audio_url = None
             self.songName = song_name
             self.select_random_icon_set()
             self.is_playing = True
@@ -327,6 +337,8 @@ class MPV_Controller:
             with self.lock:
                 self.is_playing = False
             return None
+        with self.lock:
+            self.current_audio_url = audio_url
         threading.Thread(target=self.play_audio, args=(audio_url,), daemon=True).start()
         print(song_name)
         self.update_song_name_callback(self.song_status_label(None, song_name))
@@ -338,6 +350,7 @@ class MPV_Controller:
             self.is_playing = False
             self.current_song_name = None
             self.current_song_url = None
+            self.current_audio_url = None
             self.current_remaining_label = None
             self.songName = ""
        
@@ -451,6 +464,11 @@ class MPV_Controller:
         with self.lock:
             song_name = self.current_song_name
             song_url = self.current_song_url
+            audio_url = self.current_audio_url
+            try:
+                duration = self.player.duration
+            except Exception:
+                duration = None
 
         if not song_name or not song_url:
             return None
@@ -459,6 +477,27 @@ class MPV_Controller:
         filename = self.safe_mp3_filename(song_name)
         output_path = os.path.join(destination_dir, filename)
         output_template = os.path.join(destination_dir, f"{os.path.splitext(filename)[0]}.%(ext)s")
+
+        # MPV is already playing this resolved temporary media URL. Converting that
+        # exact stream avoids asking YouTube to select the format a second time.
+        if audio_url and duration and duration > 0:
+            ffmpeg_command = [
+                'ffmpeg', '-nostdin', '-loglevel', 'error', '-y',
+                '-i', audio_url, '-t', str(int(duration) + 2),
+                '-vn', '-map', '0:a:0', '-codec:a', 'libmp3lame',
+                '-b:a', '192k', output_path,
+            ]
+            try:
+                subprocess.run(ffmpeg_command, check=True)
+                if os.path.isfile(output_path) and os.path.getsize(output_path) > 0:
+                    return output_path
+            except (OSError, subprocess.CalledProcessError) as e:
+                print(f"Direct stream MP3 conversion failed, retrying with yt-dlp: {e}")
+            try:
+                os.remove(output_path)
+            except FileNotFoundError:
+                pass
+
         ydl_opts = {
             'format': 'bestaudio/best',
             'noplaylist': True,
@@ -480,7 +519,7 @@ class MPV_Controller:
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(song_url, download=True)
-            if not info or not os.path.isfile(output_path):
+            if not info or not os.path.isfile(output_path) or os.path.getsize(output_path) == 0:
                 print("Error: MP3 file was not created.")
                 return None
             return output_path

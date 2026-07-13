@@ -268,19 +268,52 @@ class TTClient:
         return self.mpv.player_status == "stopped"
     
     def send_message(self, text: str, user: Optional[library.User] = None, type: int = 1) -> None:
-        message = library.TeamTalk5.TextMessage()
-        message.nFromUserID = self.tt.getMyUserID()
-        message.nMsgType = type
-        message.szMessage = ttstr(text)
+        # TeamTalk's text field holds 512 characters including its terminator.
+        # Keep a small safety margin and split long help/lists at line boundaries.
+        for part in self.split_message(text):
+            message = library.TeamTalk5.TextMessage()
+            message.nFromUserID = self.tt.getMyUserID()
+            message.nMsgType = type
+            message.szMessage = ttstr(part)
 
-        if type == 1:
-            if isinstance(user, int):
-                message.nToUserID = user
-            else:
-                message.nToUserID = user.id
-        elif type == 2:
-            message.nChannelID = self.tt.getMyChannelID()
-        self.tt.doTextMessage(message)
+            if type == 1:
+                if isinstance(user, int):
+                    message.nToUserID = user
+                else:
+                    message.nToUserID = user.id
+            elif type == 2:
+                message.nChannelID = self.tt.getMyChannelID()
+            self.tt.doTextMessage(message)
+
+    @staticmethod
+    def split_message(text, max_length=500):
+        text = str(text)
+        if not text:
+            return [""]
+
+        parts = []
+        while len(text) > max_length or len(text.encode("utf-8")) > max_length:
+            # TeamTalk uses a byte buffer on Linux and a wide-character buffer on
+            # Windows. Find a prefix which is safe for both representations.
+            low, high = 1, min(len(text), max_length)
+            while low < high:
+                middle = (low + high + 1) // 2
+                if len(text[:middle].encode("utf-8")) <= max_length:
+                    low = middle
+                else:
+                    high = middle - 1
+            hard_limit = low
+
+            split_at = text.rfind("\n", 0, hard_limit + 1)
+            if split_at <= 0:
+                split_at = text.rfind(" ", 0, hard_limit + 1)
+            if split_at <= 0:
+                split_at = hard_limit
+            parts.append(text[:split_at].rstrip())
+            text = text[split_at:].lstrip(" \n")
+        if text or not parts:
+            parts.append(text)
+        return parts
     
     # Read search_list.json
     def read_search_results(self):

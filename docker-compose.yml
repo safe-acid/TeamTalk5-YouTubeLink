@@ -1,9 +1,9 @@
-version: "3.9"
-
 services:
   tt5-youtubelink:
     build: .
     container_name: tt5-youtubelink
+    # Uncomment the next line to run the bot in Russian.
+    # command: ["--language", "ru"]
     environment:
       - AUDIO_SINK_NAME=Source
       - AUDIO_SOURCE_NAME=VirtualMic

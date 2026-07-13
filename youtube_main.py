@@ -1,4 +1,4 @@
-import sys, os, platform, ctypes, logging, time, threading, argparse, json
+import sys, os, platform, ctypes, logging, time, threading, argparse, json, tempfile, shutil
 from config import Config as conf
 from typing import Optional
 from messages import messages
@@ -24,6 +24,8 @@ class TTClient:
         self.tt.onConnectionLost = self.onConnectionLost
         self.tt.onCmdMyselfLoggedIn = self.onCmdMyselfLoggedIn
         self.tt.onCmdUserTextMessage = self.onCmdUserTextMessage
+        self.tt.onCmdError = self.onCmdError
+        self.tt.onCmdFileNew = self.onCmdFileNew
         self.connected = False   # Flag to track connection status
         self.connecting = False
         self.connection_lock = threading.Lock()
@@ -35,6 +37,9 @@ class TTClient:
         self.last_nickname = None
         self.last_nickname_change = 0
         self.nickname_min_interval = 2.8
+        self.download_lock = threading.Lock()
+        self.pending_uploads = {}
+        self.pending_uploads_lock = threading.Lock()
 
         # Instance of MPV_Controller with the callback
         self.mpv = MPV_Controller(self.update_nickname_with_remaining_time, self.update_status_with_song_name)
@@ -79,6 +84,43 @@ class TTClient:
         self.mpv.stop_playback()
         self.tt.doChangeStatus(0, ttstr(self.get_message("info")))  
         logger.info("Connection lost.")
+
+        with self.pending_uploads_lock:
+            pending_uploads = list(self.pending_uploads.values())
+            self.pending_uploads.clear()
+        for upload in pending_uploads:
+            shutil.rmtree(upload["temp_dir"], ignore_errors=True)
+
+    def onCmdError(self, cmdID, error):
+        with self.pending_uploads_lock:
+            upload = self.pending_uploads.pop(cmdID, None)
+        if upload is None:
+            return
+
+        error_text = ttstr(error.szErrorMsg) if getattr(error, "szErrorMsg", None) else str(error)
+        try:
+            self.send_message(f"{self.get_message('upload_failed')} {error_text}", upload["user_id"], 1)
+        finally:
+            shutil.rmtree(upload["temp_dir"], ignore_errors=True)
+
+    def onCmdFileNew(self, remote_file):
+        remote_name = ttstr(remote_file.szFileName)
+        completed = None
+        with self.pending_uploads_lock:
+            completed_cmdID = None
+            for cmdID, upload in self.pending_uploads.items():
+                if upload["filename"] == remote_name:
+                    completed_cmdID = cmdID
+                    break
+            if completed_cmdID is not None:
+                completed = self.pending_uploads.pop(completed_cmdID)
+        if completed is None:
+            return
+
+        try:
+            self.send_message(f"{self.get_message('upload_complete')} {remote_name}", completed["user_id"], 1)
+        finally:
+            shutil.rmtree(completed["temp_dir"], ignore_errors=True)
         
     def set_input_device(self, id: int) -> None:
         self.tt.initSoundInputDevice(id)  
@@ -299,6 +341,12 @@ class TTClient:
                     elif msg.lower() == "h":
                         self.send_message(self.get_message("help"), fromUserID, 1)
                         self.send_message(self.get_message("help1"), fromUserID, 1)
+                    # Download the current song as MP3 and upload it to channel files
+                    elif msg.lower() == "d":
+                        if self.mpv.current_song_name and self.mpv.current_song_url:
+                            self.start_worker(self.download_and_upload_current_song, fromUserID)
+                        else:
+                            self.send_message(self.get_message("download_no_song"), fromUserID, 1)
                     # Search and play   
                     elif msg.lower().startswith("s ") and len(msg.lower()) > 4:
                         search_query  = msg[2:].strip()
@@ -551,6 +599,50 @@ class TTClient:
             return []
     
     # Search and play thread
+    def download_and_upload_current_song(self, fromUserID):
+        if not self.download_lock.acquire(blocking=False):
+            self.send_message(self.get_message("download_busy"), fromUserID, 1)
+            return
+
+        temp_dir = tempfile.mkdtemp(prefix="teamtalk_mp3_")
+        cmdID = None
+        try:
+            self.send_message(self.get_message("download_started"), fromUserID, 1)
+            mp3_path = self.mpv.download_current_song_mp3(temp_dir)
+            if not mp3_path:
+                self.send_message(self.get_message("download_failed"), fromUserID, 1)
+                shutil.rmtree(temp_dir, ignore_errors=True)
+                return
+
+            channelID = self.tt.getMyChannelID()
+            if not channelID:
+                self.send_message(self.get_message("upload_no_channel"), fromUserID, 1)
+                shutil.rmtree(temp_dir, ignore_errors=True)
+                return
+
+            with self.pending_uploads_lock:
+                cmdID = self.tt.doSendFile(channelID, ttstr(mp3_path))
+                if cmdID > 0:
+                    self.pending_uploads[cmdID] = {
+                        "user_id": fromUserID,
+                        "filename": os.path.basename(mp3_path),
+                        "temp_dir": temp_dir,
+                    }
+                    self.send_message(f"{self.get_message('upload_started')} {os.path.basename(mp3_path)}", fromUserID, 1)
+            if cmdID <= 0:
+                self.send_message(self.get_message("upload_failed_start"), fromUserID, 1)
+                shutil.rmtree(temp_dir, ignore_errors=True)
+                return
+        except Exception:
+            logger.exception("Failed to download or upload the current song.")
+            if cmdID is not None:
+                with self.pending_uploads_lock:
+                    self.pending_uploads.pop(cmdID, None)
+            self.send_message(self.get_message("download_failed"), fromUserID, 1)
+            shutil.rmtree(temp_dir, ignore_errors=True)
+        finally:
+            self.download_lock.release()
+
     def youtube_search_and_play_thread(self, query, fromUserID, song_name=None):
         song = self.mpv.youtube_search_and_play(query, song_name)
         if song:

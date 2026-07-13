@@ -38,6 +38,7 @@ pactl load-module module-virtual-source source_name="${AUDIO_SOURCE_NAME:-Virtua
 echo "[audio] sinks:";   pactl list short sinks   || true
 echo "[audio] sources:"; pactl list short sources || true
 
-# 5) Start the bot
+# 5) Start the bot and pass optional Docker/Compose arguments.
+# Example: --language ru
 cd /opt/app/src
-exec python youtube_main.py
+exec python youtube_main.py "$@"

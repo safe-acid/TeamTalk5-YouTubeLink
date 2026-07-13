@@ -3,17 +3,54 @@ from config import Config as conf
 messages = {
    
     "help": {
-        "en": "s: Search the song name.\np: Pause/play.\n+: Next song.\n-: Previous song.\nvX: Set the volume.\nspX: Set the speed from 1 to 4.\npl: Show last searches.\nplX: Play song by ID from last search.\n+X: Seek forward.\n-X: Seek backward.",
-        "ru": "s: Поиск названия песни.\np: Пауза/воспроизведение.\n+: Следующая песня.\n-: Предыдущая песня.\nvX: Установить громкость.\nspX: Установить скорость от 1 до 4.\npl: Показать последний поиск.\nplX: Воспроизвести песню по ID из последнего поиска.\n+X: Перемотать вперёд.\n-X: Перемотать назад."
+        "en": "s: Search the song name.\np: Pause/play.\nd: Download current song as MP3 to channel files.\n+: Next song.\n-: Previous song.\nvX: Set the volume.\nspX: Set the speed from 1 to 4.\npl: Show last searches.\nplX: Play song by ID from last search.\n+X: Seek forward.\n-X: Seek backward.",
+        "ru": "s: Поиск названия песни.\np: Пауза/воспроизведение.\nd: Скачать текущую песню в MP3 в файлы канала.\n+: Следующая песня.\n-: Предыдущая песня.\nvX: Установить громкость.\nspX: Установить скорость от 1 до 4.\npl: Показать последний поиск.\nplX: Воспроизвести песню по ID из последнего поиска.\n+X: Перемотать вперёд.\n-X: Перемотать назад."
     },
     "help1": {
         "en": "?: Chck the volume\nf+: Add to favorites.\nfl: Favorite list.\nfpX: Play by ID from favorites.\nf-X: Remove by ID from favorites.\nv: About.\nq: Exit.",
         "ru": "?: Проверить громкость\nf+: Добавить в избранное.\nfl: Список избранного.\nfpX: Воспроизвести по ID из избранного.\nf-X: Удалить по ID из избранного.\nv: О программе.\nq: Выход."
     },
     
-     "info": {
+    "info": {
         "en": "\"h\" help",
         "ru": "\"h\" справка",
+    },
+
+    "download_started": {
+        "en": "Downloading the current song as MP3...",
+        "ru": "Скачиваю текущую песню в MP3..."
+    },
+    "download_busy": {
+        "en": "Another MP3 download is already in progress. Please wait.",
+        "ru": "Уже выполняется другая загрузка MP3. Подождите."
+    },
+    "download_no_song": {
+        "en": "No song is currently available to download.",
+        "ru": "Сейчас нет песни для скачивания."
+    },
+    "download_failed": {
+        "en": "Failed to create the MP3 file.",
+        "ru": "Не удалось создать MP3-файл."
+    },
+    "upload_started": {
+        "en": "Uploading to channel files:",
+        "ru": "Загружаю в файлы канала:"
+    },
+    "upload_complete": {
+        "en": "MP3 added to channel files:",
+        "ru": "MP3 добавлен в файлы канала:"
+    },
+    "upload_no_channel": {
+        "en": "Cannot upload because the bot is not in a channel.",
+        "ru": "Загрузка невозможна: бот не в канале."
+    },
+    "upload_failed_start": {
+        "en": "TeamTalk could not start the file upload.",
+        "ru": "TeamTalk не смог начать загрузку файла."
+    },
+    "upload_failed": {
+        "en": "TeamTalk rejected the file upload:",
+        "ru": "TeamTalk отклонил загрузку файла:"
     },
     
     "about": {

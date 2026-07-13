@@ -63,28 +63,29 @@ OAuth login is no longer supported. Use a YouTube Data API v3 key for search, an
     - example: s https://www.youtube.com/watch?v=X4bgXH3sJ2Q
 
 2. [p] - play\pause
-3. [+] - play next song
-4. [-] - play previous song
-5. [+X] - seeking forward 
+3. [d] - download the current song as `yt_song name.mp3` and upload it to the current channel's files
+4. [+] - play next song
+5. [-] - play previous song
+6. [+X] - seeking forward
     - example or seeking forward for 30 seconds: +30
-6. [-X] - seeking backward
+7. [-X] - seeking backward
     - example or seeking backward for 30 seconds: -30
-7. [pl] - showing last searched results
-8. [plX] - play song from search result bu ID
+8. [pl] - showing last searched results
+9. [plX] - play song from search result bu ID
     - example of playing song no 10: pl10
-9. [sp] - change of speed from 1 to 4
+10. [sp] - change of speed from 1 to 4
     - example of playing 2 times faster: sp2  
-10. [vX] - set the volume
+11. [vX] - set the volume
     - example of 50%: v50    
-11. [?] - check current volume    
-12. [f+] - add song to favorite list
-13. [fl] - check favorite list
-14. [fpX] - play song by id from favorite list
+12. [?] - check current volume
+13. [f+] - add song to favorite list
+14. [fl] - check favorite list
+15. [fpX] - play song by id from favorite list
     - example fp10
-15. [f-X] - remove song from favorite list
+16. [f-X] - remove song from favorite list
     - example f-10
-16. [v] - version
-17. [q] - quit the bot     
+17. [v] - version
+18. [q] - quit the bot
 
 ### Notes:
 

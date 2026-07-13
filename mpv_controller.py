@@ -6,6 +6,7 @@ import mpv_module
 import threading
 import re
 import json
+import os
 from config import Config as conf
 import time
 import random
@@ -444,6 +445,61 @@ class MPV_Controller:
         except Exception as e:
             print(f"Unexpected error: {e}")
             return None
+
+    def download_current_song_mp3(self, destination_dir):
+        """Download the currently selected song as an MP3 and return its path."""
+        with self.lock:
+            song_name = self.current_song_name
+            song_url = self.current_song_url
+
+        if not song_name or not song_url:
+            return None
+
+        os.makedirs(destination_dir, exist_ok=True)
+        filename = self.safe_mp3_filename(song_name)
+        output_path = os.path.join(destination_dir, filename)
+        output_template = os.path.join(destination_dir, f"{os.path.splitext(filename)[0]}.%(ext)s")
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'noplaylist': True,
+            'outtmpl': output_template,
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+        }
+        if conf.oAuth:
+            ydl_opts.update({
+                'username': 'oauth+MyProfile',
+                'password': '',
+            })
+        if conf.cookies:
+            ydl_opts['cookiefile'] = 'all_cookies.txt'
+
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(song_url, download=True)
+            if not info or not os.path.isfile(output_path):
+                print("Error: MP3 file was not created.")
+                return None
+            return output_path
+        except yt_dlp.utils.DownloadError as e:
+            print(f"Error: Failed to download MP3. {e}")
+            return None
+        except Exception as e:
+            print(f"Unexpected MP3 download error: {e}")
+            return None
+
+    @staticmethod
+    def safe_mp3_filename(song_name):
+        """Create a portable TeamTalk filename while preserving the song title."""
+        invalid = '<>:"/\\|?*'
+        cleaned = ''.join('_' if ch in invalid or ord(ch) < 32 else ch for ch in str(song_name))
+        cleaned = ' '.join(cleaned.split()).strip(' .') or 'song'
+        while len(cleaned.encode('utf-8')) > 180:
+            cleaned = cleaned[:-1]
+        return f"yt_{cleaned}.mp3"
     
     #fforrmatted time  
     def formatted_time(self, seconds):

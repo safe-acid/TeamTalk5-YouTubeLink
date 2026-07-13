@@ -1,7 +1,7 @@
 class Config:
     #Version
-    version = "3.3"
-    sdk = "SDK 5.19a"
+    version = "4.0"
+    sdk = "SDK 5.22a"
 
     #Server settings
     host = "tt5.live"
@@ -10,7 +10,7 @@ class Config:
     botName = "@YouTube"
     username = ""
     password = ""
-    ChannelName = "/"
+    ChannelName = "/IT"
     ChannelPassword = ""
     
     '''

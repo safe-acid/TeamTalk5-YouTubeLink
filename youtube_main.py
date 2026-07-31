@@ -243,10 +243,18 @@ class TTClient:
             return True
         return False
     
+    @staticmethod
+    def normalize_username(username):
+        if username is None:
+            return ""
+        if isinstance(username, (bytes, bytearray)):
+            username = username.decode("utf-8", errors="ignore")
+        return str(username).strip().casefold()
+
     def is_user_blocked(self, username):
-        normalized_username = ttstr(username).strip().casefold()
+        normalized_username = self.normalize_username(username)
         blocked_users = {
-            ttstr(blocked_username).strip().casefold()
+            self.normalize_username(blocked_username)
             for blocked_username in conf.banned_users_operrate_bot
         }
         return normalized_username in blocked_users

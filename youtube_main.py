@@ -243,10 +243,13 @@ class TTClient:
             return True
         return False
     
-    def anonymous(self, szFromUsername):
-        if len(szFromUsername) == 0:
-            return False
-        return True   
+    def is_user_blocked(self, username):
+        normalized_username = ttstr(username).strip().casefold()
+        blocked_users = {
+            ttstr(blocked_username).strip().casefold()
+            for blocked_username in conf.banned_users_operrate_bot
+        }
+        return normalized_username in blocked_users
     
     def get_message(self, key):
         if key in messages:
@@ -353,7 +356,10 @@ class TTClient:
             self.send_message("Invalid song number. Please try again.", fromUserID, 1)
     
     def onUserMessage(self, fromUserID, fromUserName, msg):
-        anonymous = self.anonymous(fromUserName)
+        # Silently ignore blocked users before doing any command-related work.
+        if self.is_user_blocked(fromUserName):
+            return
+
         userInChanel = self.userID_inChannel(fromUserID)
         msg = ttstr(msg)
         current_time = time.time()
@@ -364,8 +370,8 @@ class TTClient:
             # Update last message time
             self.last_message_time[fromUserID] = current_time
 
-            # User must be in channel and not anonymous
-            if anonymous and userInChanel:
+            # User must be in the bot's channel.
+            if userInChanel:
                 if self.isUserAdmin(fromUserID) or not self.admin:
                     # About
                     if msg.lower() == "v":

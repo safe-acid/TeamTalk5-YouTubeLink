@@ -1,6 +1,6 @@
 class Config:
     #Version
-    version = "4.0"
+    version = "4.1"
     sdk = "SDK 5.22a"
 
     #Server settings
@@ -27,6 +27,9 @@ class Config:
     max_volume = 75
     #Only admin can operaate this bot - Boolean        
     admin = False 
+    # Usernames that cannot operate the bot. Keep "" in the list to block
+    # anonymous users. Matching is case-insensitive and ignores surrounding spaces.
+    banned_users_operrate_bot = [""]
     #time in seconds when user can send message, avoid flood
     msgTimeDelay = 5
     #users nick names who allowed to add songs into favorite list
@@ -63,13 +66,3 @@ class Config:
         key = cls.API_KEYS[cls.current_key_index]
         cls.current_key_index = (cls.current_key_index + 1) % len(cls.API_KEYS)
         return key
-
-
-
-    #Personal use // ignore below
-    # Стерео 💭
-    #ChannelName = "/! Xвосты без дела ✨"
-    #ChannelName = "/!Jazz Cafe🎷"
-    #ChannelName = "/!White Panther🤍"
-    #ChannelName = "/!Борщ 🥣"
-    #ChannelName = "/мур-мяу😍"

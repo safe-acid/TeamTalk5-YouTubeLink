@@ -22,16 +22,16 @@ class TTClient:
         self.tt = library.TeamTalk5.TeamTalk()
         self.tt.onConnectSuccess = self.onConnectSuccess
         self.tt.onConnectionLost = self.onConnectionLost
+        self.tt.onConnectFailed = self.onConnectFailed
+        self.tt.onConnectCryptError = self.onConnectCryptError
         self.tt.onCmdMyselfLoggedIn = self.onCmdMyselfLoggedIn
         self.tt.onCmdUserTextMessage = self.onCmdUserTextMessage
         self.tt.onCmdError = self.onCmdError
         self.tt.onCmdFileNew = self.onCmdFileNew
-        self.connected = False   # Flag to track connection status
-        self.connecting = False
-        self.connection_lock = threading.Lock()
-        self.reconnect_delay =  10 # Set reconnect interval to 10 seconds
-        self.reconnect_thread = None
-       
+        self.reconnect_delay = 10
+        self.connect_timeout = 30
+        self.retry_at = None
+
         self.admin = conf.admin  # Initialize the admin flag
         self.last_message_time = defaultdict(lambda: 0)  # Track last message time for each user
         self.last_nickname = None
@@ -51,36 +51,36 @@ class TTClient:
         self.tt.enableVoiceTransmission(False)
     
     def start(self):
-        if self.reconnect_thread is None:
-            self.reconnect_thread = threading.Thread(target=self.reconnect_loop, daemon=True)
-            self.reconnect_thread.start()
+        time.sleep(getattr(conf, "startup_delay_seconds", 1.5))
         self.connect()
-                   
+        while True:
+            self.tt.runEventLoop(250)
+            if self.retry_at is not None and time.monotonic() >= self.retry_at:
+                logger.info("Attempting to reconnect...")
+                self.tt.disconnect()
+                self.connect()
+
     def connect(self):
-        with self.connection_lock:
-            if self.connected or self.connecting:
-                return
-            self.connecting = True
-        try:
-            self.tt.connect(self.host, self.tcpPort, self.udpPort)
-        except Exception:
-            logger.exception("Failed to connect.")
-            raise
-        finally:
-            with self.connection_lock:
-                self.connecting = False
+        if self.tt.connect(self.host, self.tcpPort, self.udpPort, bEncrypted=getattr(conf, "useTLS", False)):
+            self.retry_at = time.monotonic() + self.connect_timeout
+        else:
+            self.onConnectFailed()
 
     def onConnectSuccess(self):
-        with self.connection_lock:
-            self.connected = True # Connection established
-            self.connecting = False
+        self.retry_at = None
         self.tt.doLogin(self.nickName, self.userName, self.password, ttstr(conf.botName))
         time.sleep(1)
-              
+
+    def onConnectFailed(self):
+        logger.warning("TeamTalk connection failed.")
+        self.retry_at = time.monotonic() + self.reconnect_delay
+
+    def onConnectCryptError(self, error):
+        logger.warning("TeamTalk TLS error: %s", error.szErrorMsg)
+        self.retry_at = time.monotonic() + self.reconnect_delay
+
     def onConnectionLost(self):
-        with self.connection_lock:
-            self.connected = False
-            self.connecting = False
+        self.retry_at = time.monotonic() + self.reconnect_delay
         self.mpv.stop_playback()
         self.tt.doChangeStatus(0, ttstr(self.get_message("info")))  
         logger.info("Connection lost.")
@@ -716,22 +716,6 @@ class TTClient:
         self.send_message(message, fromUserID, 1)
         
     # Reconnect
-    def reconnect_loop(self):
-        while True:   
-            if not self.connected:
-                logger.info("Attempting to reconnect...")
-                try:
-                    self.tt.disconnect()
-                except Exception:
-                    logger.debug("Disconnect before reconnect failed.", exc_info=True)
-                time.sleep(2)
-                # Attempt to reconnect
-                try:
-                    self.connect()
-                except Exception:
-                    logger.exception("Reconnect attempt failed.")
-            time.sleep(self.reconnect_delay)    
-
 if __name__ == "__main__":
     try:
         parser = argparse.ArgumentParser(description='Process some integers.')
@@ -749,11 +733,7 @@ if __name__ == "__main__":
         
         ttClient = TTClient(ttstr(conf.host), conf.tcpPort, conf.udpPort, ttstr(conf.botName), ttstr(conf.username), ttstr(conf.password))
         
-        # Start the TeamTalk client if not displaying devices
-        time.sleep(1.5)
         ttClient.start()
-        while True:
-            ttClient.tt.runEventLoop()
-                
+
     except KeyboardInterrupt:
         running = False

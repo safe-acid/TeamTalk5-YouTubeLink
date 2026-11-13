@@ -1,17 +1,20 @@
 class Config:
+    startup_delay_seconds = 1.5  # Delay before the first TeamTalk connection.
+    useTLS = True  # Set True for an encrypted TeamTalk server.
     #Version
-    version = "4.1"
+    version = "4.2"
     sdk = "SDK 5.22a"
 
     #Server settings
     host = "tt5.live"
-    tcpPort = 10333
-    udpPort = 10333
+    tcpPort = 10555
+    udpPort = 10555
     botName = "@YouTube"
     username = ""
     password = ""
     ChannelName = "/IT"
     ChannelPassword = ""
+    # "🐳", "⚡", "📻", "🎙️", "🎶", "🔊", "❤️", "⭐️", "🎲", "✨"]
     
     '''
     Update your Audio ID and server's settings in config.py file and API Key. API key could be created for free in Google Cloud Console (https://console.cloud.google.com/) Menu -> APIs & Servces -> Creditants
